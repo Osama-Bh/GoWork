@@ -1,8 +1,11 @@
-﻿namespace GoWork.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace GoWork.Models
 {
     public class JobSkill
     {
-        // Composite Key properties
+        [Key]
         public int JobId { get; set; }
         public int SkillId { get; set; }
 

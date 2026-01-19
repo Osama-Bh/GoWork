@@ -5,13 +5,16 @@ using System.Text.Json.Serialization;
 
 namespace GoWork.Models
 {
-    
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum EmployerStatus
+
+    public class EmployerStatus
     {
-        PendingForApproval = 1,
-        Approved = 2,
-        Rejected = 3,
+        public int Id { get; set; }              // PK, matches enum
+        public string Name { get; set; } = null!;   // "Pending", "Active", "Suspended"
+        public int SortOrder { get; set; }       // UI display order
+        public bool IsActive { get; set; } = true;
+
+        public ICollection<Employer> Employers { get; set; } = new List<Employer>();
     }
-  
+
+
 }
