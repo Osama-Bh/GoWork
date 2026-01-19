@@ -24,17 +24,14 @@ namespace GoWork.Models
         public string? Major { get; set; }
         public string? ResumeUrl { get; set; }
         public int AddressId { get; set; }
-        [ForeignKey("AddressId")]
-        public Address Address { get; set; } = null!;
         public int InterestCategoryId { get; set; }
-        [ForeignKey("InterestCategoryId")]
-        public Category InterestCategory { get; set; } = null!;
 
-        //[Required(ErrorMessage = "City is required.")]
-        //[StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
-        //public string City { get; set; } = null!;
 
         // Navigation
+        [ForeignKey("InterestCategoryId")]
+        public Category InterestCategory { get; set; } = null!;
+        [ForeignKey("AddressId")]
+        public Address Address { get; set; } = null!;
         public ICollection<SeekerSkill> SeekerSkills { get; set; } = null!;
         public ICollection<Application>? Applications { get; set; }
 
