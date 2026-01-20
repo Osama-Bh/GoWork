@@ -17,13 +17,13 @@ namespace GoWork.Models
         public int CategoryId { get; set; }
         public int JobTypeId { get; set; }
         public int JobLocationTypeId { get; set; }
+        public int AddressId { get; set; }
         [Range(0.01, 1000000.00, ErrorMessage = "Price must be between $0.01 and $1,000,000.00.")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal MinSalary { get; set; }
         [Range(0.01, 1000000.00, ErrorMessage = "Price must be between $0.01 and $1,000,000.00.")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal MaxSalary { get; set; }
-        public int AddressId { get; set; }
         public int CurrencyId { get; set; }
         public DateTime PostedDate { get; set; }
         public DateTime ExpirationDate { get; set; }
@@ -40,12 +40,12 @@ namespace GoWork.Models
         public JobLocationType JobLocationType { get; set; } = null!;
         [ForeignKey("CurrencyId")]
         public Currency Currency { get; set; } = null!;
-        [ForeignKey("AddressId")]
         public Address Address { get; set; } = null!;
         [ForeignKey("JobStatusId")]
         public JobStatus JobStatus { get; set; } = null!;
 
         public ICollection<JobSkill> JobSkills { get; set; } = null!;
+        public ICollection<Application> Applications { get; set; } = null!;
 
     }
 }

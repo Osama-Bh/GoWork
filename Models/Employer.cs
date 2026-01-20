@@ -10,14 +10,13 @@ namespace GoWork.Models
         [Required]
         public int UserId { get; set; }
         [ForeignKey("UserId")]
-        public ApplicationUser ApplicationUser { get; set; }
-
-        public int AddressId { get; set; }
-        [ForeignKey("AddressId")]
+        public ApplicationUser ApplicationUser { get; set; } = null!;
         public Address Address { get; set; } = null!;
 
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Company Name must be between 3 and 100 characters")]
         public string ComapnyName { get; set; } = null!;
+        public int AddressId { get; set; }
+        [Url(ErrorMessage = "Please enter a valid URL for the company logo.")]
         public string LogoUrl { get; set; } = null!;
 
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Industry Name must be between 3 and 100 characters")]

@@ -4,12 +4,12 @@ namespace GoWork.Models
 {
     public class SeekerSkill
     {
-        [Key]
+        public int Id { get; set; }
         public int SeekerId { get; set; }
         public int SkillId { get; set; }
 
         // Navigation
-        public Seeker Seeker { get; set; }
-        public Skill Skill { get; set; }
+        public Seeker Seeker { get; set; } = null!;
+        public Skill Skill { get; set; } = null!;
     }
 }

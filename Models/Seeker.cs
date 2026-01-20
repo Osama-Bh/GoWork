@@ -21,16 +21,15 @@ namespace GoWork.Models
         [StringLength(50, ErrorMessage = "Last Name cannot exceed 50 characters.")]
         public string LastName { get; set; } = null!;
         [StringLength(50, ErrorMessage = "Major cannot exceed 100 characters.")]
+        public int AddressId { get; set; }
         public string? Major { get; set; }
         public string? ResumeUrl { get; set; }
-        public int AddressId { get; set; }
         public int InterestCategoryId { get; set; }
 
 
         // Navigation
         [ForeignKey("InterestCategoryId")]
         public Category InterestCategory { get; set; } = null!;
-        [ForeignKey("AddressId")]
         public Address Address { get; set; } = null!;
         public ICollection<SeekerSkill> SeekerSkills { get; set; } = null!;
         public ICollection<Application>? Applications { get; set; }

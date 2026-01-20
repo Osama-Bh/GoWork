@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using GoWork.Enums;
+using GoWork.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 using System.Xml.Linq;
 
 namespace GoWork.Data
@@ -12,9 +15,223 @@ namespace GoWork.Data
             
         }
 
+        public virtual DbSet<Application> TbApplications { get; set; }
+        public virtual DbSet<ApplicationStatus> TbApplicationStatuses { get; set; }
+        public virtual DbSet<Category> TbCategories { get; set; }
+        public virtual DbSet<Country> TbCountries { get; set; }
+        public virtual DbSet<Currency> TbCurrencies { get; set; }
+        public virtual DbSet<Employer> TbEmployers { get; set; }
+        public virtual DbSet<EmployerStatus> TbEmployerStatuses { get; set; }
+        public virtual DbSet<Feedback> TbFeedbacks { get; set; }
+        public virtual DbSet<FeedbackType> TbFeedbackTypes { get; set; }
+        public virtual DbSet<Governate> TbGovernates { get; set; }
+        public virtual DbSet<Interview> TbInterviews { get; set; }
+        public virtual DbSet<InterviewStatus> TbInterviewStatuses { get; set; }
+        public virtual DbSet<InterviewType> TbInterviewTypes { get; set; }
+        public virtual DbSet<Job> TbJobs { get; set; }
+        public virtual DbSet<JobLocationType> TbJobLocationTypes { get; set; }
+        public virtual DbSet<JobSkill> TbJobSkills { get; set; }
+        public virtual DbSet<JobStatus> TbJobStatuses { get; set; }
+        public virtual DbSet<JobType> TbJobTypes { get; set; }
+        public virtual DbSet<Seeker> TbSeekers { get; set; }
+        public virtual DbSet<SeekerSkill> TbSeekerSkills { get; set; }
+        public virtual DbSet<Skill> TbSkills { get; set; }
+        public virtual DbSet<Address> TbAddresses { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Configure relationships and restrict delete actions
+            builder.Entity<Job>()
+                .HasOne(j => j.Employer)
+                .WithMany(e => e.Jobs)
+                .HasForeignKey(j => j.EmployerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Application>()
+                .HasOne(a => a.Job)
+                .WithMany(j => j.Applications)
+                .HasForeignKey(a => a.JobId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Application>()
+                .HasOne(a => a.Seeker)
+                .WithMany(s => s.Applications)
+                .HasForeignKey(a => a.SeekerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Interview>()
+                .HasOne(i => i.Application)
+                .WithMany(a => a.Interviews)
+                .HasForeignKey(i => i.ApplicationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Interview>()
+                .HasOne(i => i.InterviewType)
+                .WithMany(it => it.Interviews)
+                .HasForeignKey(i => i.InterviewTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Interview>()
+                .HasOne(i => i.InterviewStatus)
+                .WithMany(ins => ins.Interviews)
+                .HasForeignKey(i => i.InterviewStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ----- Seeker -----
+            builder.Entity<Seeker>()
+             .HasOne(s => s.Address)
+             .WithOne()
+             .HasForeignKey<Seeker>(s => s.AddressId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+
+            // ----- Employer -----
+            builder.Entity<Employer>()
+            .HasOne(e => e.Address)
+            .WithOne()
+            .HasForeignKey<Employer>(e => e.AddressId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            // ----- Job -----
+            builder.Entity<Job>()
+            .HasOne(j => j.Address)
+            .WithOne()
+            .HasForeignKey<Job>(j => j.AddressId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Seeker>()
+            .HasIndex(s => s.AddressId)
+            .IsUnique();
+
+            builder.Entity<Employer>()
+                .HasIndex(e => e.AddressId)
+                .IsUnique();
+
+            builder.Entity<Job>()
+                .HasIndex(j => j.AddressId)
+                .IsUnique();
+
+
+            // ---- Global Restrict for all relationships ----
+            foreach (var foreignKey in builder.Model
+                         .GetEntityTypes()
+                         .SelectMany(e => e.GetForeignKeys()))
+            {
+                foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+            }
+
+            // Seed data for ApplicationStatus
+            builder.Entity<ApplicationStatus>().HasData(
+                Enum.GetValues(typeof(ApplicationStatusEnum))
+                    .Cast<ApplicationStatusEnum>()
+                    .Select(e => new ApplicationStatus
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for InterviewStatus
+            builder.Entity<InterviewStatus>().HasData(
+                Enum.GetValues(typeof(InterviewStatusEnum))
+                    .Cast<InterviewStatusEnum>()
+                    .Select(e => new InterviewStatus
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for Currency
+            builder.Entity<Currency>().HasData(
+                Enum.GetValues(typeof(CurrencyEnum))
+                    .Cast<CurrencyEnum>()
+                    .Select(e => new Currency
+                    {
+                        Id = (int)e,
+                        Code = e.ToString(),
+                        Name = e.ToString(),
+                    })
+            );
+
+            // Seed data for FeedbackType
+            builder.Entity<FeedbackType>().HasData(
+                Enum.GetValues(typeof(FeedbackTypeEnum))
+                    .Cast<FeedbackTypeEnum>()
+                    .Select(e => new FeedbackType
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for InterviewType
+            builder.Entity<InterviewType>().HasData(
+                Enum.GetValues(typeof(InterviewTypeEnum))
+                    .Cast<InterviewTypeEnum>()
+                    .Select(e => new InterviewType
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for JobLocationType
+            builder.Entity<JobLocationType>().HasData(
+                Enum.GetValues(typeof(JobLocationTypeEnum))
+                    .Cast<JobLocationTypeEnum>()
+                    .Select(e => new JobLocationType
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for JobType
+            builder.Entity<JobType>().HasData(
+                Enum.GetValues(typeof(JobTypeEnum))
+                    .Cast<JobTypeEnum>()
+                    .Select(e => new JobType
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for JobStatus
+            builder.Entity<JobStatus>().HasData(
+                Enum.GetValues(typeof(JobStatusEnum))
+                    .Cast<JobStatusEnum>()
+                    .Select(e => new JobStatus
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
+
+            // Seed data for EmployerStatus
+            builder.Entity<EmployerStatus>().HasData(
+                Enum.GetValues(typeof(EmployerStatusEnum))
+                    .Cast<EmployerStatusEnum>()
+                    .Select(e => new EmployerStatus
+                    {
+                        Id = (int)e,
+                        Name = e.ToString(),
+                        SortOrder = (int)e * 10
+                    })
+            );
         }
+
+        
     }
 }

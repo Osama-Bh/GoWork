@@ -8,11 +8,11 @@ namespace GoWork.Models
     {
         public int Id { get; set; }
         public string AddressLine1 { get; set; } = null!;
-        public string? AddressLine2 { get; set; }
         public string PostalCode { get; set; } = null!;
         public int CountryId { get; set; }
         public int GovernateId { get; set; }
 
+        // Navigation properties
         [ForeignKey("CountryId")]
         public Country Country { get; set; } = null!;
         [ForeignKey("GovernateId")]

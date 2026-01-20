@@ -4,7 +4,7 @@ namespace GoWork.Models
 {
     public class Skill
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         [Required(ErrorMessage = "Skill Name is required.")]
         [StringLength(70, ErrorMessage = "Skill Name cannot exceed 70 characters.")]
         public string Name { get; set; } = null!;
