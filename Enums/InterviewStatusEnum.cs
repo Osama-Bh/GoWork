@@ -6,7 +6,8 @@
         Completed = 2,   // Interview finished
         Cancelled = 3,   // Cancelled by employer or seeker
         Rescheduled = 4,  // Moved to a new date/time
-        NoShow = 5    // Candidate did not attend
+        NoShow = 5,    // Candidate did not attend
+        Confirmed = 6    // Candidate confirmed attendance
     }
 
 }

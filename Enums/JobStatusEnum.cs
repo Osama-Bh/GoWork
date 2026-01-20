@@ -2,11 +2,10 @@
 {
     public enum JobStatusEnum
     {
-        Draft = 1,        // Job saved as draft, not published
-        Published = 2,    // Actively accepting applications
-        Paused = 3,       // Temporarily closed to applications
-        Filled = 4,       // Position filled, no longer accepting
-        Expired = 5       // Past application deadline
+        Published = 1,    // Actively accepting applications
+        Closed = 2,      // Manually closed by employer
+        Filled = 3,       // Position filled, no longer accepting
+        Expired = 4       // Past application deadline
     }
 
 }

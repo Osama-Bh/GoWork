@@ -6,5 +6,4 @@
         Remote = 2,
         Hybrid = 3
     }
-
 }

@@ -6,8 +6,6 @@
         PartTime = 2,
         Contract = 3,
         Internship = 4,
-        Temporary = 5,
-        Freelance = 6
     }
 
 }

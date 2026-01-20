@@ -1,7 +1,8 @@
-﻿public enum FeedbackTypeEnum
+﻿namespace GoWork.Enums
 {
-    Bug = 1,
-    FeatureRequest = 2,
-    Complaint = 3,
-    Other = 4
+    public enum FeedbackTypeEnum
+    {
+        FeatureRequest = 1,
+        Complaint = 2
+    }
 }
