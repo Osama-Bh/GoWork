@@ -24,6 +24,7 @@ namespace GoWork.Models
         public int AddressId { get; set; }
         public string? Major { get; set; }
         public string? ResumeUrl { get; set; }
+        public string? ProfilePhoto { get; set; }
         public int InterestCategoryId { get; set; }
 
 
