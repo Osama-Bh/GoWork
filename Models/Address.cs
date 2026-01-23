@@ -8,7 +8,6 @@ namespace GoWork.Models
     {
         public int Id { get; set; }
         public string AddressLine1 { get; set; } = null!;
-        public string PostalCode { get; set; } = null!;
         public int CountryId { get; set; }
         public int GovernateId { get; set; }
 

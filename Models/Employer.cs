@@ -17,7 +17,7 @@ namespace GoWork.Models
         public string ComapnyName { get; set; } = null!;
         public int AddressId { get; set; }
         [Url(ErrorMessage = "Please enter a valid URL for the company logo.")]
-        public string LogoUrl { get; set; } = null!;
+        public string? LogoUrl { get; set; } = null!;
 
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Industry Name must be between 3 and 100 characters")]
         public string Industry { get; set; } = null!;
