@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GoWork.DTOs
+namespace GoWork.DTOs.AuthDTOs
 {
     public class LoginDTO
     {

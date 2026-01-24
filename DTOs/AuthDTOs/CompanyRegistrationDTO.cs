@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GoWork.DTOs
+namespace GoWork.DTOs.AuthDTOs
 {
     public class CompanyRegistrationDTO
     {
@@ -32,7 +32,7 @@ namespace GoWork.DTOs
         [StringLength(100)]
         public string Industry { get; set; }
 
-        [Url]
-        public string LogoUrl { get; set; }
+        //[Url]
+        public string? LogoUrl { get; set; }
     }
 }

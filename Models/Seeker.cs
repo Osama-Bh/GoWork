@@ -21,7 +21,7 @@ namespace GoWork.Models
         [StringLength(50, ErrorMessage = "Last Name cannot exceed 50 characters.")]
         public string LastName { get; set; } = null!;
         [StringLength(50, ErrorMessage = "Major cannot exceed 100 characters.")]
-        public int AddressId { get; set; }
+        public int? AddressId { get; set; }
         public string? Major { get; set; }
         public string? ResumeUrl { get; set; }
         public string? ProfilePhoto { get; set; }

@@ -1,0 +1,8 @@
+﻿namespace GoWork.DTOs.AuthDTOs
+{
+    public class EmployerResponseDTO
+    {
+        public int EmployerId { get; set; }
+        public string Email { get; set; } = string.Empty;
+    }
+}

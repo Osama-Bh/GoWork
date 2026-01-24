@@ -6,7 +6,7 @@ namespace GoWork.Data
 {
     public class ApplicationUser : IdentityUser<int>
     {
-        [JsonIgnore]        
+        [JsonIgnore]
         public Seeker? Seeker { get; set; }
         [JsonIgnore]
         public Employer? Employer { get; set; }
