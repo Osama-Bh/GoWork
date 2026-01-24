@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 
-namespace GoWork.DTOs
+namespace GoWork.DTOs.AuthDTOs
 {
     public class CandidateRegistrationDTO
     {
@@ -35,10 +36,10 @@ namespace GoWork.DTOs
         [DataType(DataType.Password)]
         public string PasswordConfirmation { get; set; }
 
-        [Url]
+        //[Url]
         public string? ProfilePhotoUrl { get; set; }
 
-        [Url]
+        //[Url]
         public string? ResumeUrl { get; set; }
 
         [Required]

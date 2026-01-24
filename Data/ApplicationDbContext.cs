@@ -15,6 +15,11 @@ namespace GoWork.Data
             
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+        }
+
         public virtual DbSet<Application> TbApplications { get; set; }
         public virtual DbSet<ApplicationStatus> TbApplicationStatuses { get; set; }
         public virtual DbSet<Category> TbCategories { get; set; }
@@ -79,6 +84,17 @@ namespace GoWork.Data
                 .WithMany(ins => ins.Interviews)
                 .HasForeignKey(i => i.InterviewStatusId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Skill>(entity =>
+            {
+                entity.Property(s => s.Name)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.HasIndex(s => s.Name)
+                      .IsUnique();
+            });
+
 
             // ----- Seeker -----
             builder.Entity<Seeker>()

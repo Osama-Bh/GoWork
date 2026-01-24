@@ -1,5 +1,7 @@
 
 using GoWork.Data;
+using GoWork.Service.AccountService;
+using GoWork.Services.EmailService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,22 @@ namespace GoWork
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            #region ASP.NET Identity
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+
+                options.User.RequireUniqueEmail = true; // email must be unique for each user
+
+                options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
+            #endregion
 
             #region Swagger
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -36,19 +54,6 @@ namespace GoWork
             builder.Services.AddSwaggerGen();
             #endregion
 
-
-            #region ASP.NET Identity
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-
-                options.User.RequireUniqueEmail = true; // email must be unique for each user
-            })
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders(); 
-            #endregion
 
             #region JWT Authantication
             // we can also call this from another class like extension class or write it here 
@@ -75,6 +80,9 @@ namespace GoWork
             });
             #endregion
 
+            builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -86,8 +94,11 @@ namespace GoWork
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            //app.UseStaticFiles();       // Enables serving static files from wwwroot (e.g., CSS, JS, images)
 
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.MapControllers();
 
