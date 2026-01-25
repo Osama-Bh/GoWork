@@ -4,6 +4,7 @@ using GoWork.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GoWork.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260125120404_SeedCategory")]
+    partial class SeedCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,7 +42,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbFeedbackTypes", (string)null);
+                    b.ToTable("TbFeedbackTypes");
 
                     b.HasData(
                         new
@@ -148,7 +151,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("GovernateId");
 
-                    b.ToTable("TbAddresses", (string)null);
+                    b.ToTable("TbAddresses");
                 });
 
             modelBuilder.Entity("GoWork.Models.Application", b =>
@@ -179,7 +182,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("SeekerId");
 
-                    b.ToTable("TbApplications", (string)null);
+                    b.ToTable("TbApplications");
                 });
 
             modelBuilder.Entity("GoWork.Models.ApplicationStatus", b =>
@@ -202,7 +205,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbApplicationStatuses", (string)null);
+                    b.ToTable("TbApplicationStatuses");
 
                     b.HasData(
                         new
@@ -250,7 +253,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbCategories", (string)null);
+                    b.ToTable("TbCategories");
                 });
 
             modelBuilder.Entity("GoWork.Models.Country", b =>
@@ -274,7 +277,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbCountries", (string)null);
+                    b.ToTable("TbCountries");
                 });
 
             modelBuilder.Entity("GoWork.Models.Currency", b =>
@@ -298,7 +301,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbCurrencies", (string)null);
+                    b.ToTable("TbCurrencies");
 
                     b.HasData(
                         new
@@ -379,7 +382,7 @@ namespace GoWork.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("TbEmployers", (string)null);
+                    b.ToTable("TbEmployers");
                 });
 
             modelBuilder.Entity("GoWork.Models.EmployerStatus", b =>
@@ -402,7 +405,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbEmployerStatuses", (string)null);
+                    b.ToTable("TbEmployerStatuses");
 
                     b.HasData(
                         new
@@ -463,7 +466,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.ToTable("TbFeedbacks", (string)null);
+                    b.ToTable("TbFeedbacks");
                 });
 
             modelBuilder.Entity("GoWork.Models.Interview", b =>
@@ -503,7 +506,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("InterviewTypeId");
 
-                    b.ToTable("TbInterviews", (string)null);
+                    b.ToTable("TbInterviews");
                 });
 
             modelBuilder.Entity("GoWork.Models.InterviewStatus", b =>
@@ -526,7 +529,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbInterviewStatuses", (string)null);
+                    b.ToTable("TbInterviewStatuses");
 
                     b.HasData(
                         new
@@ -593,7 +596,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbInterviewTypes", (string)null);
+                    b.ToTable("TbInterviewTypes");
 
                     b.HasData(
                         new
@@ -687,7 +690,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("JobTypeId");
 
-                    b.ToTable("TbJobs", (string)null);
+                    b.ToTable("TbJobs");
                 });
 
             modelBuilder.Entity("GoWork.Models.JobSkill", b =>
@@ -710,7 +713,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.ToTable("TbJobSkills", (string)null);
+                    b.ToTable("TbJobSkills");
                 });
 
             modelBuilder.Entity("GoWork.Models.JobStatus", b =>
@@ -733,7 +736,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbJobStatuses", (string)null);
+                    b.ToTable("TbJobStatuses");
 
                     b.HasData(
                         new
@@ -819,7 +822,7 @@ namespace GoWork.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("TbSeekers", (string)null);
+                    b.ToTable("TbSeekers");
                 });
 
             modelBuilder.Entity("GoWork.Models.SeekerSkill", b =>
@@ -842,7 +845,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.ToTable("TbSeekerSkills", (string)null);
+                    b.ToTable("TbSeekerSkills");
                 });
 
             modelBuilder.Entity("GoWork.Models.Skill", b =>
@@ -863,7 +866,7 @@ namespace GoWork.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("TbSkills", (string)null);
+                    b.ToTable("TbSkills");
                 });
 
             modelBuilder.Entity("Governate", b =>
@@ -885,7 +888,7 @@ namespace GoWork.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("TbGovernates", (string)null);
+                    b.ToTable("TbGovernates");
                 });
 
             modelBuilder.Entity("JobLocationType", b =>
@@ -908,7 +911,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbJobLocationTypes", (string)null);
+                    b.ToTable("TbJobLocationTypes");
 
                     b.HasData(
                         new
@@ -954,7 +957,7 @@ namespace GoWork.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TbJobTypes", (string)null);
+                    b.ToTable("TbJobTypes");
 
                     b.HasData(
                         new
