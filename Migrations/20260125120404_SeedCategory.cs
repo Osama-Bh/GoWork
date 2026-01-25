@@ -10,6 +10,7 @@ namespace GoWork.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            //Seeding Categories
             migrationBuilder.InsertData(
                 table: "TbCategories",
                 columns: new[] { "Name" },
