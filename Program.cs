@@ -77,7 +77,20 @@ namespace GoWork
                         Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"])),
                     RoleClaimType = ClaimTypes.Role  // ← This line is important
                 };
+                //Added
+
+                // ✅ ADDITION: Read JWT from HttpOnly cookie
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        context.Token = context.Request.Cookies["access_token"];
+                        return Task.CompletedTask;
+                    }
+                };
             });
+
+
             #endregion
 
             builder.Services.AddScoped<IAccountService, AccountService>();

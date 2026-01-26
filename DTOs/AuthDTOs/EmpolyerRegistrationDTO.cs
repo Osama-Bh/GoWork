@@ -2,7 +2,7 @@
 
 namespace GoWork.DTOs.AuthDTOs
 {
-    public class CompanyRegistrationDTO
+    public class EmpolyerRegistrationDTO
     {
         [Required]
         [StringLength(100, MinimumLength = 2)]
