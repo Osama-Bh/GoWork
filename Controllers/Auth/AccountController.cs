@@ -4,6 +4,7 @@ using GoWork.DTOs.AuthDTOs;
 using GoWork.Models;
 using GoWork.Service.AccountService;
 using GoWork.Services.EmailService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -57,14 +58,14 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("EmployerRegister")]
-        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> EmployerRegister(CompanyRegistrationDTO employerRegistrationDTO)
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> EmployerRegister(EmpolyerRegistrationDTO employerRegistrationDTO)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest("Invalid registration data.");
             }
             var response = await _accountService.RegisterCompany(employerRegistrationDTO);
-            if (response.StatusCode != 201)
+            if (response.StatusCode != 200)
             {
                 return StatusCode((int)response.StatusCode, response);
             }
@@ -102,5 +103,79 @@ namespace GoWork.Controllers.Auth
             }
             return Ok(response);
         }
+
+
+        //Added
+
+        [HttpPost("CompanyLogin")]
+        public async Task<ActionResult<ApiResponse<LoginResponseDTO>>> LoginCompany(LoginDTO loginDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid Login data.");
+            }
+
+            var response = await _accountService.LoginCompany(loginDTO);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+
+            //var token = response.Data.Token;
+            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+            var token = _accountService.GenerateJwtToken(user);
+
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(response);
+        }
+
+        //Added
+
+        [HttpPost("VerifyCompanyEmail")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> VerifyCompanyEmail(EmailConfirmationDTO confirmationDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid Confirmation data.");
+            }
+
+            var response = await _accountService.VerifyCompanyEmail(confirmationDTO);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+
+            // ✅ Generate JWT
+            var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
+            var token = _accountService.GenerateJwtToken(user);
+
+            // ✅ Inject cookie
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(response);
+        }
+        // Added
+
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token");
+            return Ok("Logout Succcessfully");
+        }
+
     }
 }
