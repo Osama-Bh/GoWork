@@ -32,11 +32,11 @@ namespace GoWork.Service.AccountService
             _configuration = configuration;
         }
 
-        public async Task<ApiResponse<CandidateRegistrationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
+        public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
         {
 
             if (_context.TbCategories.FirstOrDefault(c => c.Id == registrationDTO.InterstedInCategoryId) is null)
-                return new ApiResponse<CandidateRegistrationResponseDTO>(400, "Invalid category ID.");
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid category ID.");
 
             var user = new ApplicationUser
             {
@@ -48,7 +48,7 @@ namespace GoWork.Service.AccountService
             var result = await _userManager.CreateAsync(user, registrationDTO.Password);
 
             if (!result.Succeeded)
-                return new ApiResponse<CandidateRegistrationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+                return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
 
             // 2️⃣ Handle skills
             var normalizedSkills = registrationDTO.ListOfSkills
@@ -97,52 +97,12 @@ namespace GoWork.Service.AccountService
 
             await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.FirstName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.FirstName);
 
-            return new ApiResponse<CandidateRegistrationResponseDTO>(201, new CandidateRegistrationResponseDTO
+            return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
             {
-                CandidateId = seeker.Id,
-                Email = user.Email
+                Message = "There is a code have been sent to your email please check"
             });
 
         }
-
-        //public async Task<ApiResponse<EmployerResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
-        //{
-
-        //    var user = new ApplicationUser
-        //    {
-        //        UserName = registrationDTO.Email,
-        //        Email = registrationDTO.Email,
-        //        PhoneNumber = registrationDTO.PhoneNumber,
-        //    };
-
-        //    var result = await _userManager.CreateAsync(user, registrationDTO.Password);
-
-        //    if (!result.Succeeded)
-        //        return new ApiResponse<EmployerResponseDTO>(400, "User creation failed! Please check user details and try again.");
-
-        //    var employer = new Employer
-        //    {
-        //        UserId = user.Id,
-        //        ComapnyName = registrationDTO.CompanyName,
-        //        Industry = registrationDTO.Industry,
-        //        LogoUrl = registrationDTO.LogoUrl,
-        //        EmployerStatusId = (int)EmployerStatusEnum.PendingApproval,
-        //    };
-
-
-        //    await _context.TbEmployers.AddAsync(employer);
-        //    await _context.SaveChangesAsync();
-
-        //    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-        //    await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.CompanyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.CompanyName);
-        //    return new ApiResponse<EmployerResponseDTO>(201, new EmployerResponseDTO
-        //    {
-        //        EmployerId = employer.Id,
-        //        Email = user.Email,
-        //        CompanyName = employer.ComapnyName
-        //    });
-        //}
 
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
@@ -181,30 +141,40 @@ namespace GoWork.Service.AccountService
                 Message = "There is a code have been sent to your email please check"
             });
         }
-        public async Task<ApiResponse<ConfirmationResponseDTO>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
+        public async Task<ApiResponse<CandidateResponseDTO>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (string.IsNullOrEmpty(confirmationDTO.Email) || string.IsNullOrEmpty(confirmationDTO.EmailConfirmationCode))
-                return new ApiResponse<ConfirmationResponseDTO>(400, "Email or Confimation Code is missing !");
+                return new ApiResponse<CandidateResponseDTO>(400, "Email or Confimation Code is missing !");
 
             var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
 
             if (user is null)
             {
-                return new ApiResponse<ConfirmationResponseDTO>(400, "User Nou Found.");
+                return new ApiResponse<CandidateResponseDTO>(400, "User Nou Found.");
             }
 
             var isVerfied = await _userManager.ConfirmEmailAsync(user, confirmationDTO.EmailConfirmationCode);
 
             if (isVerfied.Succeeded)
             {
-                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                await _userManager.AddToRoleAsync(user, "Candidate");
+                var candidate = _context.TbSeekers.FirstOrDefault(c => c.UserId == user.Id);
+
+                if (candidate is null)
+                    return new ApiResponse<CandidateResponseDTO>(400, "Candidate profile not found.");
+
+                return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
                 {
-                    Message = "Email verified successfully!"
+                    CandidateId = candidate.Id,
+                    Email = user.Email,
+                    Role = "Candidate",
+                    Token = GenerateJwtToken(user)
                 });
+                
             }
             else
             {
-                return new ApiResponse<ConfirmationResponseDTO>(400, "Email verification failed. Please check the confirmation code and try again.");
+                return new ApiResponse<CandidateResponseDTO>(400, "Email verification failed. Please check the confirmation code and try again.");
             }
         }
 

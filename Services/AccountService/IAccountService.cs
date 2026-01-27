@@ -6,26 +6,34 @@ namespace GoWork.Service.AccountService
 {
     public interface IAccountService
     {
-        Task<ApiResponse<CandidateRegistrationResponseDTO>> CandidateRegisterAsync(
+        // Candidate
+        Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(
             CandidateRegistrationDTO registrationDTO
         );
 
-        Task<ApiResponse<ConfirmationResponseDTO>> VerifyEmail(
+        Task<ApiResponse<CandidateResponseDTO>> VerifyEmail(
             EmailConfirmationDTO confirmationDTO
         );
 
-        Task<ApiResponse<EmployerResponseDTO>> VerifyCompanyEmail(EmailConfirmationDTO confirmationDTO);
-
         Task<ApiResponse<LoginResponseDTO>> Login(
             LoginDTO loginDTO
+        );
+
+        // Employer
+        Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(
+            EmpolyerRegistrationDTO registrationDTO
+        );
+
+        Task<ApiResponse<EmployerResponseDTO>> VerifyCompanyEmail(
+            EmailConfirmationDTO confirmationDTO
         );
 
         Task<ApiResponse<EmployerResponseDTO>> LoginCompany(
             LoginDTO loginDTO
         );
 
-        Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO);
-        string GenerateJwtToken(ApplicationUser? user);
+        // Token
+        string GenerateJwtToken(ApplicationUser user);
     }
 
 }
