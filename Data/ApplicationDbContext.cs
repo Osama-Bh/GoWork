@@ -246,6 +246,27 @@ namespace GoWork.Data
                         SortOrder = (int)e * 10
                     })
             );
+
+            builder.Entity<IdentityRole<int>>().HasData(
+                new IdentityRole<int>
+                {
+                    Id = 1,
+                    Name = "Admin",
+                    NormalizedName = "ADMIN"
+                },
+                new IdentityRole<int>
+                {
+                    Id = 2,
+                    Name = "Candidate",
+                    NormalizedName = "CANDIDATE"
+                },
+                new IdentityRole<int>
+                {
+                    Id = 3,
+                    Name = "Company",
+                    NormalizedName = "COMPANY"
+                }
+            );
         }
 
         
