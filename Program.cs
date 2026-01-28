@@ -2,6 +2,7 @@
 using GoWork.Data;
 using GoWork.Service.AccountService;
 using GoWork.Services.EmailService;
+using GoWork.Services.FileService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +96,7 @@ namespace GoWork
 
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IFileService, FileService>();
 
             var app = builder.Build();
 

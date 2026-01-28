@@ -36,18 +36,16 @@ namespace GoWork.DTOs.AuthDTOs
         [DataType(DataType.Password)]
         public string PasswordConfirmation { get; set; }
 
-        //[Url]
-        public string? ProfilePhotoUrl { get; set; }
+        public IFormFile? ProfilePhoto { get; set; }
 
-        //[Url]
-        public string? ResumeUrl { get; set; }
+        public IFormFile? Resume { get; set; }
 
         [Required]
         [MinLength(1, ErrorMessage = "At least one skill is required")]
         public List<string> ListOfSkills { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Invalid category")]
-        public int InterstedInCategoryId { get; set; }
+        //[Range(1, int.MaxValue, ErrorMessage = "Invalid category")]
+        public string InterstedInCategoryId { get; set; }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs.AuthDTOs;
+using GoWork.DTOs.FileDTOs;
+using GoWork.Enums;
 
 namespace GoWork.Service.AccountService
 {
@@ -10,6 +12,9 @@ namespace GoWork.Service.AccountService
         Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(
             CandidateRegistrationDTO registrationDTO
         );
+
+        //Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(UploadFileRequestDTO fileRequestDTO, FileCategoryEnum fileCategory);
+
 
         Task<ApiResponse<CandidateResponseDTO>> VerifyEmail(
             EmailConfirmationDTO confirmationDTO
@@ -31,6 +36,13 @@ namespace GoWork.Service.AccountService
         Task<ApiResponse<EmployerResponseDTO>> LoginCompany(
             LoginDTO loginDTO
         );
+
+        Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory);
+
+        Task<ApiResponse<FileDownloadDto>> DownloadFile(int userId, FileCategoryEnum fileCategory);
+        Task<ApiResponse<ConfirmationResponseDTO>> UploadResume(UploadFileRequestDTO requestDTO);
+
+
 
         // Token
         string GenerateJwtToken(ApplicationUser user);
