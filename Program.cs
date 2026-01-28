@@ -49,6 +49,12 @@ namespace GoWork
             .AddDefaultTokenProviders();
             #endregion
 
+            // ✅ ADDITION: Token lifetime for email confirmation & reset password
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromMinutes(15);
+            });
+
             #region Swagger
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
