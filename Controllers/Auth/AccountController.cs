@@ -45,7 +45,7 @@ namespace GoWork.Controllers.Auth
             _frontendBaseUrl = configuration["Frontend:BaseUrl"];
         }
 
-        [HttpPost("CandidateRegister")]
+        [HttpPost("Candidate/Register")]
         public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> CandidateRegister(CandidateRegistrationDTO candidateRegistrationDTO)
         {
             if (!ModelState.IsValid)
@@ -61,7 +61,7 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-        [HttpPost("EmployerRegister")]
+        [HttpPost("Register")]
         public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> EmployerRegister(EmpolyerRegistrationDTO employerRegistrationDTO)
         {
             if (!ModelState.IsValid)
@@ -76,8 +76,8 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-        [HttpPost("VerifyEmail")]
-        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
+        [HttpPost("Candidate/VerifyEmail")]
+        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -92,7 +92,7 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-        [HttpPost("Login")]
+        [HttpPost("Candidate/Login")]
         public async Task<ActionResult<ApiResponse<LoginResponseDTO>>> Login(LoginDTO loginDTO)
         {
             if (!ModelState.IsValid)
@@ -111,8 +111,8 @@ namespace GoWork.Controllers.Auth
 
         //Added
 
-        [HttpPost("CompanyLogin")]
-        public async Task<ActionResult<ApiResponse<LoginResponseDTO>>> LoginCompany(LoginDTO loginDTO)
+        [HttpPost("Login")]
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> LoginCompany(LoginDTO loginDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -142,8 +142,8 @@ namespace GoWork.Controllers.Auth
 
         //Added
 
-        [HttpPost("VerifyCompanyEmail")]
-        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> VerifyCompanyEmail(EmailConfirmationDTO confirmationDTO)
+        [HttpPost("VerifyEmail")]
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> VerifyCompanyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -171,10 +171,10 @@ namespace GoWork.Controllers.Auth
 
             return Ok(response);
         }
-        // Added
 
+        // Added
         [Authorize]
-        [HttpPost("logout")]
+        [HttpPost("Logout")]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("access_token");
@@ -259,7 +259,7 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-        [HttpPost("forgot-password")]
+        [HttpPost("ForgetPassword")]
         public async Task<IActionResult> ForgotPassword(ForgetPasswordDTO dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -277,7 +277,7 @@ namespace GoWork.Controllers.Auth
             return Ok();
         }
 
-        [HttpPost("reset-password")]
+        [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword(ResetPasswordDTO dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);

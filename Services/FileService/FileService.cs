@@ -28,7 +28,7 @@ namespace GoWork.Services.FileService
             _credential = new StorageSharedKeyCredential(account, key);
 
             var serviceClient = new BlobServiceClient(
-                new Uri($""),
+                new Uri($"https://{account}.blob.core.windows.net"),
                 _credential);
 
             _container = serviceClient.GetBlobContainerClient(containerName);
