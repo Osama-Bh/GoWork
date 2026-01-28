@@ -33,6 +33,6 @@ namespace GoWork.DTOs.AuthDTOs
         public string Industry { get; set; }
 
         //[Url]
-        public string? LogoUrl { get; set; }
+        public IFormFile? LogoUrl { get; set; }
     }
 }
