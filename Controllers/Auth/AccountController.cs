@@ -1,6 +1,7 @@
 ﻿using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs.AuthDTOs;
+using GoWork.DTOs.FileDTOs;
 using GoWork.Models;
 using GoWork.Service.AccountService;
 using GoWork.Services.EmailService;
@@ -177,5 +178,82 @@ namespace GoWork.Controllers.Auth
             return Ok("Logout Succcessfully");
         }
 
+        [Authorize]
+        [HttpPost("UploadResume")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UploadResume(UploadFileRequestDTO requestDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data.");
+            }
+            var response = await _accountService.UploadResume(requestDTO);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpPut("UpdateProfilePhoto")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdatePhoto(UpdateFileRequestDTO requestDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data.");
+            }
+            var response = await _accountService.UpdateFile(requestDTO, Enums.FileCategoryEnum.Image);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("DownloadProfilePhoto/{UserId}")]
+        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetProfileImage(int UserId)
+        {
+            if (UserId <= 0)
+                return BadRequest("Invalid UserId.");
+
+            var response = await _accountService.DownloadFile(UserId, Enums.FileCategoryEnum.Image);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpPut("UpdateResume")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateResume(UpdateFileRequestDTO requestDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid data.");
+            }
+            var response = await _accountService.UpdateFile(requestDTO, Enums.FileCategoryEnum.Resume);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("DownloadResume/{UserId}")]
+        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetResume(int UserId)
+        {
+            if (UserId <= 0)
+                return BadRequest("Invalid UserId.");
+
+            var response = await _accountService.DownloadFile(UserId, Enums.FileCategoryEnum.Resume);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
     }
 }
