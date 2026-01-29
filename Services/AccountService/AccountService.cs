@@ -170,12 +170,22 @@ namespace GoWork.Service.AccountService
             if (!result.Succeeded)
                 return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
 
+            string logoUrl = null;
+            if (registrationDTO.LogoUrl is not null)
+            {
+                var uploadResult = await _fileService.UploadAsync(registrationDTO.LogoUrl);
+                if (uploadResult is not null)
+                {
+                    logoUrl = uploadResult.BlobUri;
+                }
+            }
+
             var employer = new Employer
             {
                 UserId = user.Id,
                 ComapnyName = registrationDTO.CompanyName,
                 Industry = registrationDTO.Industry,
-                LogoUrl = registrationDTO.LogoUrl,
+                LogoUrl = logoUrl,
                 EmployerStatusId = (int)EmployerStatusEnum.PendingApproval,
             };
 
@@ -304,11 +314,19 @@ namespace GoWork.Service.AccountService
             //var token = GenerateJwtToken(user);
 
             var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+            var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "Unknown";
 
             return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
             {
                 EmployerId = company.Id,
                 Email = user.Email,
+                SasUrl = downLoadResult.SasUrl,
+                ExpiresAt = downLoadResult.ExpiresAt,
+                //Role = "Company",
+                Role = role,
                 CompanyName = company.ComapnyName
             });
         }
@@ -331,13 +349,32 @@ namespace GoWork.Service.AccountService
 
             if (isVerfied.Succeeded)
             {
-                
-                var company = _context.TbEmployers.FirstOrDefault(c=> c.UserId == user.Id);
 
+                await _userManager.AddToRoleAsync(user, "Company");
+                var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+                if (company is null)
+                    return new ApiResponse<EmployerResponseDTO>(400, "Company logo not found.");
+
+                if (company.LogoUrl is null)
+                {
+                    return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+                    {
+                        EmployerId = company.Id,
+                        Email = user.Email,
+                        Role = "Company",
+                        CompanyName = company.ComapnyName
+                    });
+                }
+
+                var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
                 return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
                 {
                     EmployerId = company.Id,
                     Email = user.Email,
+                    SasUrl = downLoadResult.SasUrl,
+                    ExpiresAt = downLoadResult.ExpiresAt,
+                    Role = "Company",
                     CompanyName = company.ComapnyName
                 });
             }
