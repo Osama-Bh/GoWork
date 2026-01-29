@@ -104,6 +104,20 @@ namespace GoWork
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IFileService, FileService>();
 
+            #region Cors Settings
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("GoWorkApiCorePolicy", policy =>
+                {
+                    policy.WithOrigins(
+                            "https://go-work-next-js.vercel.app"
+                        ).AllowAnyHeader().AllowAnyMethod();
+
+                });
+            }
+            );
+            #endregion
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -116,6 +130,8 @@ namespace GoWork
             app.UseHttpsRedirection();
 
             //app.UseStaticFiles();       // Enables serving static files from wwwroot (e.g., CSS, JS, images)
+
+            app.UseCors("GoWorkApiCorePolicy");
 
             app.UseAuthentication();
 
