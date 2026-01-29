@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -26,7 +27,7 @@ namespace GoWork.Service.AccountService
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly IFileService _fileService;
-
+        private readonly string _frontendBaseUrl;
         public AccountService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration, IFileService fileService)
         {
             _context = context;
@@ -34,6 +35,7 @@ namespace GoWork.Service.AccountService
             _emailService = emailService;
             _configuration = configuration;
             _fileService = fileService;
+            _frontendBaseUrl = configuration["Frontend:BaseUrl"];
         }
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
@@ -331,6 +333,48 @@ namespace GoWork.Service.AccountService
             });
         }
 
+        public async Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(ForgetPasswordDTO forgetpasswordDTO)
+        {
+            
+            var user = await _userManager.FindByEmailAsync(forgetpasswordDTO.Email);
+
+            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+                return new ApiResponse<ConfirmationResponseDTO>(400,"Invalid request"); // Prevent account enumeration
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+
+            var resetUrl = $"{_frontendBaseUrl}?email={forgetpasswordDTO.Email}&token={encodedToken}";
+
+            await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", $"Click here: {resetUrl}");
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "There is a link have been sent to your email please check"
+            });
+
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> ResetPassword(ResetPasswordDTO resetpasswordDTO)
+        {
+
+            var user = await _userManager.FindByEmailAsync(resetpasswordDTO.Email);
+            if (user == null)
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request");
+
+            var decodedToken = WebUtility.UrlDecode(resetpasswordDTO.Token);
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, resetpasswordDTO.NewPassword);
+
+            if (!result.Succeeded)
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request");
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "Password reset successfully"
+            });
+
+        }
 
         //Added
         public async Task<ApiResponse<EmployerResponseDTO>> VerifyCompanyEmail(EmailConfirmationDTO confirmationDTO)

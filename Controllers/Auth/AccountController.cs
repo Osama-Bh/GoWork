@@ -260,38 +260,37 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("ForgetPassword")]
-        public async Task<IActionResult> ForgotPassword(ForgetPasswordDTO dto)
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ForgotPassword(ForgetPasswordDTO forgetpasswordDTO)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid Email");
+            }
+            var response = await _accountService.ForgetPassword(forgetpasswordDTO);
+            
+            if(response.StatusCode !=200)
+            {
+                return  StatusCode((int)response.StatusCode, response);
+            }
 
-            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
-                return Ok(); // Prevent account enumeration
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token);
-
-            var resetUrl = $"{_frontendBaseUrl}?email={dto.Email}&token={encodedToken}";
-
-            await _emailService.SendEmailAsync(dto.Email, "Reset Password", $"Click here: {resetUrl}");
-
-            return Ok();
+            return Ok(response);
         }
 
         [HttpPost("ResetPassword")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordDTO dto)
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ResetPassword(ResetPasswordDTO resetpasswordDTO)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
-                return BadRequest("Invalid request");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid Email");
+            }
+            var response = await _accountService.ResetPassword(resetpasswordDTO);
 
-            var decodedToken = WebUtility.UrlDecode(dto.Token);
+            if(response.StatusCode !=200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
 
-            var result = await _userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok("Password reset successfully");
+            return Ok(response);
         }
     }
 }

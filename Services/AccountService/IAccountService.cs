@@ -37,6 +37,13 @@ namespace GoWork.Service.AccountService
             LoginDTO loginDTO
         );
 
+        Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(
+            ForgetPasswordDTO forgetpasswordDTO
+        );
+
+        Task<ApiResponse<ConfirmationResponseDTO>> ResetPassword(
+            ResetPasswordDTO resetpasswordDTO
+        );
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory);
 
         Task<ApiResponse<FileDownloadDto>> DownloadFile(int userId, FileCategoryEnum fileCategory);
