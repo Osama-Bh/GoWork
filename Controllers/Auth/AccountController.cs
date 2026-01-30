@@ -182,6 +182,52 @@ namespace GoWork.Controllers.Auth
         }
 
         [Authorize]
+        [HttpPatch("Candidate/UpdateProfile")]
+        public async Task<ActionResult<ApiResponse<UpdateProfileResponseDTO>>> UpdateCandidateProfile([FromForm]UpdateProfileDTO profileDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request data.");
+            }
+            // Retrieve the CandidateId from the authenticated user's claims
+            var candidateIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (candidateIdClaim == null || !int.TryParse(candidateIdClaim.Value, out int candidateId))
+            {
+                return Unauthorized("Unauthorized: CandidateId not found.");
+            }
+            var response = await _accountService.UpdateCandidateProfileAsync(candidateId, profileDTO);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode,  response);
+            }
+            return response;
+        }
+
+        [Authorize]
+        [HttpGet("candidate/profile/me")]
+        public async Task<ActionResult<ApiResponse<CandidateProfileResponseDTO>>> GetCandidateProfile()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request data.");
+            }
+            // Retrieve the CandidateId from the authenticated user's claims
+            var candidateIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (candidateIdClaim == null || !int.TryParse(candidateIdClaim.Value, out int candidateId))
+            {
+                return Unauthorized("Unauthorized: CandidateId not found.");
+            }
+            var response = await _accountService.GetCandidateProfileAsync(candidateId);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+
+        [Authorize]
         [HttpPost("UploadResume")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UploadResume(UploadFileRequestDTO requestDTO)
         {
