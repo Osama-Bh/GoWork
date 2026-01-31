@@ -46,7 +46,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("Candidate/Register")]
-        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> CandidateRegister(CandidateRegistrationDTO candidateRegistrationDTO)
+        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> CandidateRegister([FromForm]CandidateRegistrationDTO candidateRegistrationDTO)
         {
             if (!ModelState.IsValid)
             {
