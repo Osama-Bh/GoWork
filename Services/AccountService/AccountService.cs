@@ -130,6 +130,182 @@ namespace GoWork.Service.AccountService
 
         }
 
+        public async Task<ApiResponse<UpdateProfileResponseDTO>> UpdateCandidateProfileAsync(int userId, UpdateProfileDTO dto)
+        {
+            try
+            {
+                var candidate = await _context.TbSeekers
+                .Include(c => c.SeekerSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+                if (candidate == null)
+                    throw new Exception("Candidate not found");
+
+                // =========================
+                // Scalar fields (PATCH)
+                // =========================
+                if (dto.FirstName != null)
+                    candidate.FirsName = dto.FirstName;
+
+                if (dto.MiddleName != null)
+                    candidate.MiddleName = dto.MiddleName;
+
+                if (dto.LastName != null)
+                    candidate.LastName = dto.LastName;
+
+                // =========================
+                // Profile photo upload
+                // =========================
+                if (dto.ProfilePhoto != null)
+                {
+                    if (candidate.ProfilePhoto is not null)
+                    {
+                        var isUpdated = await _fileService.UpdateAsync(
+                            dto.ProfilePhoto,
+                            candidate.ProfilePhoto);
+                    }
+                    else
+                    {
+                        var profilePhotoUrl = await _fileService.UploadAsync(dto.ProfilePhoto);
+                        candidate.ProfilePhoto = profilePhotoUrl?.BlobUri;
+                    }
+                }
+
+                // =========================
+                // Resume upload
+                // =========================
+                if (dto.ResumeFile != null)
+                {
+                    if (candidate.ResumeUrl is not null)
+                    {
+                        var isUpdated = await _fileService.UpdateAsync(
+                            dto.ResumeFile,
+                            candidate.ResumeUrl);
+                    }
+                    else
+                    {
+                        var resumeUrl = await _fileService.UploadAsync(dto.ResumeFile);
+                        candidate.ResumeUrl = resumeUrl?.BlobUri;
+                    }
+                }
+
+                // =========================
+                // Skills (Many-to-Many)
+                // =========================
+                if (dto.Skills != null)
+                {
+                    // Normalize skill names
+                    var normalizedSkillNames = dto.Skills
+                        .Select(s => s.Trim().ToLower())
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .Distinct()
+                        .ToList();
+
+                    // Get skills that already exist
+                    var existingSkills = await _context.TbSkills
+                        .Where(s => normalizedSkillNames.Contains(s.Name.ToLower()))
+                        .ToListAsync();
+
+                    // Detect new skills
+                    var newSkillNames = normalizedSkillNames
+                        .Except(existingSkills.Select(s => s.Name.ToLower()))
+                        .ToList();
+
+                    // Insert new skills
+                    foreach (var skillName in newSkillNames)
+                    {
+                        var skill = new Skill
+                        {
+                            Name = skillName
+                        };
+
+                        _context.TbSkills.Add(skill);
+                        existingSkills.Add(skill);
+                    }
+
+                    // Replace candidate skills (links only)
+                    _context.TbSeekerSkills.RemoveRange(candidate.SeekerSkills);
+                    candidate.SeekerSkills.Clear();
+
+                    // Add new relations one by one
+                    foreach (var skill in existingSkills)
+                    {
+                        candidate.SeekerSkills.Add(new SeekerSkill
+                        {
+                            SeekerId = candidate.Id,
+                            Skill = skill
+                        });
+                    }
+                }
+
+
+
+                await _context.SaveChangesAsync();
+
+                var user = await _userManager.FindByIdAsync(candidate.UserId.ToString());
+
+                FileDownloadDto fileDownloadDto = null;
+                if (candidate.ProfilePhoto is not null)
+                    fileDownloadDto = _fileService.DownloadUrlAsync(candidate.ProfilePhoto);
+
+                // =========================
+                // Return updated profile
+                // =========================
+                return new ApiResponse<UpdateProfileResponseDTO>(200, new UpdateProfileResponseDTO
+                {
+                    FirstName = candidate.FirsName,
+                    MiddleName = candidate.MiddleName,
+                    LastName = candidate.LastName,
+                    Emial = user.Email,
+                    ProfilePhotoUrl = fileDownloadDto is null ? null : fileDownloadDto.SasUrl,
+                    Role = "Candidate",
+                    Skills = candidate.SeekerSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => cs.Skill!.Name)
+                    .ToList() ?? new List<string>()
+                });
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<UpdateProfileResponseDTO>(500, "An error occurred while updating the profile.");
+            }
+            
+        }
+
+        public async Task<ApiResponse<CandidateProfileResponseDTO>> GetCandidateProfileAsync(int userId)
+        {
+            var candidate = await _context.TbSeekers
+                .Include(c => c.SeekerSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (candidate == null)
+                return new ApiResponse<CandidateProfileResponseDTO>(404, "Candidate not found.");
+
+            var user = await _userManager.FindByIdAsync(candidate.UserId.ToString());
+
+            List<FileDownloadDto> lstFillsDTO = new List<FileDownloadDto>();
+            if (candidate.ProfilePhoto is not null)
+                lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ProfilePhoto));
+
+            if (candidate.ResumeUrl is not null)
+                lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ResumeUrl));
+
+            return new ApiResponse<CandidateProfileResponseDTO>(200, new CandidateProfileResponseDTO
+            {
+                FirstName = candidate.FirsName,
+                MiddleName = string.IsNullOrEmpty(candidate.MiddleName) ? null : candidate.MiddleName,
+                LastName = candidate.LastName,
+                ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
+                ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
+                Skills = candidate.SeekerSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => cs.Skill!.Name)
+                    .ToList() ?? new List<string>()
+            });
+        }
+
         //public async Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(UploadFileRequestDTO fileRequestDTO, FileCategoryEnum fileCategory)
         //{
         //    var uploadResult = await _fileService.UploadAsync(fileRequestDTO.File);
@@ -143,7 +319,7 @@ namespace GoWork.Service.AccountService
         //    {
         //        return new ApiResponse<ConfirmationResponseDTO>(404, "Candidate not found.");
         //    }
-            
+
         //    if (fileCategory == FileCategoryEnum.Image)
         //        candidate.ProfilePhoto = uploadResult.BlobUri;
         //    else if (fileCategory == FileCategoryEnum.Resume)
