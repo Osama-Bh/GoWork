@@ -62,7 +62,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> EmployerRegister(EmpolyerRegistrationDTO employerRegistrationDTO)
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> EmployerRegister([FromForm] EmpolyerRegistrationDTO employerRegistrationDTO)
         {
             if (!ModelState.IsValid)
             {
