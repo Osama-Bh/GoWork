@@ -110,8 +110,9 @@ namespace GoWork
                 options.AddPolicy("GoWorkApiCorePolicy", policy =>
                 {
                     policy.WithOrigins(
+                            "http://localhost:3000",
                             "https://go-work-next-js.vercel.app"
-                        ).AllowAnyHeader().AllowAnyMethod();
+                        ).AllowAnyHeader().AllowAnyMethod().AllowCredentials(); 
 
                 });
             }
@@ -140,6 +141,56 @@ namespace GoWork
             app.MapControllers();
 
             app.Run();
+        }
+    }
+}
+
+namespace GoWork
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+
+            // ================================
+            // Cookie settings (VERY IMPORTANT)
+            // ================================
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.None; // REQUIRED for cross-site
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // HTTPS only
+            });
+
+
+
+            // ================================
+            // CORS (CRITICAL FIX)
+            // ================================
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("GoWorkApiCorePolicy", policy =>
+                {
+                    policy
+                        .WithOrigins(
+                            "http://localhost:3000",
+                            "https://go-work-next-js.vercel.app"
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
+
+            // ================================
+            // Swagger
+            // ================================
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
         }
     }
 }

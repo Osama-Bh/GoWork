@@ -9,7 +9,7 @@ namespace GoWork.Controllers.Dashboard
     [ApiController]
     public class CompanyController : ControllerBase
     {
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet("test-auth")]
         public IActionResult TestAuth()
         {
