@@ -45,6 +45,36 @@ namespace GoWork.Controllers.Auth
             _frontendBaseUrl = configuration["Frontend:BaseUrl"];
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("AdminTest")]
+        public IActionResult GetAdmin()
+        {
+            return Ok("Welcome Admin");
+        }
+
+        [Authorize(Roles = "Company")]
+        [HttpGet("CompanyTest")]
+        public IActionResult GetCompany()
+        {
+            return Ok("Welcome Company");
+        }
+
+        [Authorize]
+        [HttpGet("Me")]
+        public async Task<IActionResult> Me()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new
+            {
+                role = roles.FirstOrDefault()
+            });
+        }
+
         [HttpPost("Candidate/Register")]
         public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> CandidateRegister([FromForm]CandidateRegistrationDTO candidateRegistrationDTO)
         {
@@ -133,8 +163,9 @@ namespace GoWork.Controllers.Auth
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/"
             });
 
             return Ok(response);
@@ -165,8 +196,9 @@ namespace GoWork.Controllers.Auth
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/"
             });
 
             return Ok(response);
@@ -177,8 +209,15 @@ namespace GoWork.Controllers.Auth
         [HttpPost("Logout")]
         public IActionResult Logout()
         {
-            Response.Cookies.Delete("access_token");
-            return Ok("Logout Succcessfully");
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/"
+            });
+
+            return Ok("Logout Successfully");
         }
 
         [Authorize]
