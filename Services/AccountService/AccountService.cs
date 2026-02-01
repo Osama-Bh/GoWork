@@ -489,24 +489,44 @@ namespace GoWork.Service.AccountService
             if (!await _userManager.IsEmailConfirmedAsync(user))
                 return new ApiResponse<EmployerResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
 
-            //var token = GenerateJwtToken(user);
-
-            var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
-            var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
-
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.FirstOrDefault() ?? "Unknown";
+            
+            //var token = GenerateJwtToken(user);
 
-            return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+            if(role == "Company")
             {
-                EmployerId = company.Id,
-                Email = user.Email,
-                SasUrl = downLoadResult.SasUrl,
-                ExpiresAt = downLoadResult.ExpiresAt,
-                //Role = "Company",
-                Role = role,
-                CompanyName = company.ComapnyName
-            });
+                var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+                if (company == null)
+                    return new ApiResponse<EmployerResponseDTO>(404, "Employer info not found for this user.");
+
+                var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
+
+
+
+                return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+                {
+                    EmployerId = company.Id,
+                    Email = user.Email,
+                    SasUrl = downLoadResult.SasUrl,
+                    ExpiresAt = downLoadResult.ExpiresAt,
+                    //Role = "Company",
+                    Role = role,
+                    CompanyName = company.ComapnyName
+                });
+            }
+            else
+            {
+                // For other roles, return minimal info without company details
+                return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+                {
+                    EmployerId = user.Id, // or null if your DTO supports it
+                    Email = user.Email,
+                    Role = role
+                });
+            }
+            
         }
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(ForgetPasswordDTO forgetpasswordDTO)
