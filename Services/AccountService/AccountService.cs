@@ -476,6 +476,59 @@ namespace GoWork.Service.AccountService
         }
 
         // Added 
+        //public async Task<ApiResponse<EmployerResponseDTO>> LoginCompany(LoginDTO loginDTO)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+
+        //    if (user is null)
+        //        return new ApiResponse<EmployerResponseDTO>(404, "User not found.");
+
+        //    if (!await _userManager.CheckPasswordAsync(user, loginDTO.Password))
+        //        return new ApiResponse<EmployerResponseDTO>(400, "Invalid password.");
+
+        //    if (!await _userManager.IsEmailConfirmedAsync(user))
+        //        return new ApiResponse<EmployerResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
+
+        //    var roles = await _userManager.GetRolesAsync(user);
+        //    var role = roles.FirstOrDefault() ?? "Unknown";
+
+        //    //var token = GenerateJwtToken(user);
+
+        //    if(role == "Company")
+        //    {
+        //        var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+        //        if (company == null)
+        //            return new ApiResponse<EmployerResponseDTO>(404, "Employer info not found for this user.");
+
+        //        var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
+
+
+
+        //        return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+        //        {
+        //            EmployerId = company.Id,
+        //            Email = user.Email,
+        //            SasUrl = downLoadResult.SasUrl,
+        //            ExpiresAt = downLoadResult.ExpiresAt,
+        //            //Role = "Company",
+        //            Role = role,
+        //            CompanyName = company.ComapnyName
+        //        });
+        //    }
+        //    else
+        //    {
+        //        // For other roles, return minimal info without company details
+        //        return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+        //        {
+        //            EmployerId = user.Id, // or null if your DTO supports it
+        //            Email = user.Email,
+        //            Role = role
+        //        });
+        //    }
+
+        //}
+
         public async Task<ApiResponse<EmployerResponseDTO>> LoginCompany(LoginDTO loginDTO)
         {
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
@@ -487,14 +540,25 @@ namespace GoWork.Service.AccountService
                 return new ApiResponse<EmployerResponseDTO>(400, "Invalid password.");
 
             if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {company?.ComapnyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", company.ComapnyName);
+                //return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                //{
+                //    Message = "There is a code have been sent to your email please check"
+                //});
                 return new ApiResponse<EmployerResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
+            }
+
 
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.FirstOrDefault() ?? "Unknown";
-            
+
             //var token = GenerateJwtToken(user);
 
-            if(role == "Company")
+            if (role == "Company")
             {
                 var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
 
@@ -526,7 +590,7 @@ namespace GoWork.Service.AccountService
                     Role = role
                 });
             }
-            
+
         }
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(ForgetPasswordDTO forgetpasswordDTO)
