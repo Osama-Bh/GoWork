@@ -16,7 +16,7 @@ namespace GoWork.Service.AccountService
         //Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(UploadFileRequestDTO fileRequestDTO, FileCategoryEnum fileCategory);
 
 
-        Task<ApiResponse<CandidateResponseDTO>> VerifyEmail(
+        Task<ApiResponse<CandidateResponseDTO2>> VerifyEmail(
             EmailConfirmationDTO confirmationDTO
         );
 
@@ -45,8 +45,8 @@ namespace GoWork.Service.AccountService
             ResetPasswordDTO resetpasswordDTO
         );
 
-        Task<ApiResponse<UpdateProfileResponseDTO>> UpdateCandidateProfileAsync(int candidateId, UpdateProfileDTO dto);
-        Task<ApiResponse<CandidateProfileResponseDTO>> GetCandidateProfileAsync(int userId);
+        Task<ApiResponse<CandidateResponseDTO>> UpdateCandidateProfileAsync(int candidateId, UpdateProfileDTO dto);
+        Task<ApiResponse<CandidateResponseDTO>> GetCandidateProfileAsync(int userId);
 
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory);
 
