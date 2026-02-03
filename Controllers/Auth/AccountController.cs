@@ -76,7 +76,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("Candidate/Register")]
-        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> CandidateRegister([FromForm]CandidateRegistrationDTO candidateRegistrationDTO)
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> CandidateRegister([FromForm]CandidateRegistrationDTO candidateRegistrationDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -107,7 +107,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [HttpPost("Candidate/VerifyEmail")]
-        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
+        public async Task<ActionResult<ApiResponse<CandidateResponseDTO2>>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -222,7 +222,7 @@ namespace GoWork.Controllers.Auth
 
         [Authorize]
         [HttpPatch("Candidate/UpdateProfile")]
-        public async Task<ActionResult<ApiResponse<UpdateProfileResponseDTO>>> UpdateCandidateProfile([FromForm]UpdateProfileDTO profileDTO)
+        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> UpdateCandidateProfile([FromForm]UpdateProfileDTO profileDTO)
         {
             if (!ModelState.IsValid)
             {
@@ -240,12 +240,12 @@ namespace GoWork.Controllers.Auth
             {
                 return StatusCode(response.StatusCode,  response);
             }
-            return response;
+            return Ok(response);
         }
 
         [Authorize]
         [HttpGet("candidate/profile/me")]
-        public async Task<ActionResult<ApiResponse<CandidateProfileResponseDTO>>> GetCandidateProfile()
+        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> GetCandidateProfile()
         {
             if (!ModelState.IsValid)
             {
