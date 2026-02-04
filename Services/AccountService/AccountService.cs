@@ -40,97 +40,121 @@ namespace GoWork.Service.AccountService
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
         {
-            var categoryId = int.Parse(registrationDTO.InterstedInCategoryId);
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (_context.TbCategories.FirstOrDefault(c => c.Id == categoryId) is null)
-                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid category ID.");
-
-            var user = new ApplicationUser
+            ApplicationUser user = null;
+            try
             {
-                UserName = registrationDTO.Email,
-                Email = registrationDTO.Email,
-                PhoneNumber = registrationDTO.PhoneNumber,
-            };
+                var categoryId = int.Parse(registrationDTO.InterstedInCategoryId);
 
-            var result = await _userManager.CreateAsync(user, registrationDTO.Password);
+                if (_context.TbCategories.FirstOrDefault(c => c.Id == categoryId) is null)
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid category ID.");
 
-            if (!result.Succeeded)
-                return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
-
-            // 2️⃣ Handle skills
-            var normalizedSkills = registrationDTO.ListOfSkills
-                .Select(s => s.Trim().ToLower())
-                .Distinct()
-                .ToList();
-
-            var existingSkills = _context.TbSkills
-                .Where(s => normalizedSkills.Contains(s.Name.ToLower()))
-                .ToList();
-
-            var existingSkillNames = existingSkills
-                .Select(s => s.Name.ToLower())
-                .ToHashSet();
-
-            var newSkills = normalizedSkills
-                .Where(s => !existingSkillNames.Contains(s))
-                .Select(s => new Skill { Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(s) })
-                .ToList();
-
-            _context.TbSkills.AddRange(newSkills);
-            var allSkills = existingSkills.Concat(newSkills).ToList();
-
-            string profilePhotoUrl = null;
-            if (registrationDTO.ProfilePhoto is not null)
-            {
-                var uploadResult = await _fileService.UploadAsync(registrationDTO.ProfilePhoto);
-                if (uploadResult is not null)
+                user = new ApplicationUser
                 {
-                    profilePhotoUrl = uploadResult.BlobUri;
+                    UserName = registrationDTO.Email,
+                    Email = registrationDTO.Email,
+                    PhoneNumber = registrationDTO.PhoneNumber,
+                };
+
+                var result = await _userManager.CreateAsync(user, registrationDTO.Password);
+
+                if (!result.Succeeded)
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+
+                // 2️⃣ Handle skills
+                var normalizedSkills = registrationDTO.ListOfSkills
+                    .Select(s => s.Trim().ToLower())
+                    .Distinct()
+                    .ToList();
+
+                var existingSkills = _context.TbSkills
+                    .Where(s => normalizedSkills.Contains(s.Name.ToLower()))
+                    .ToList();
+
+                var existingSkillNames = existingSkills
+                    .Select(s => s.Name.ToLower())
+                    .ToHashSet();
+
+                var newSkills = normalizedSkills
+                    .Where(s => !existingSkillNames.Contains(s))
+                    .Select(s => new Skill { Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(s) })
+                    .ToList();
+
+                _context.TbSkills.AddRange(newSkills);
+                var allSkills = existingSkills.Concat(newSkills).ToList();
+
+                string profilePhotoUrl = null;
+                if (registrationDTO.ProfilePhoto is not null)
+                {
+                    var uploadResult = await _fileService.UploadAsync(registrationDTO.ProfilePhoto);
+                    if (uploadResult is not null)
+                    {
+                        profilePhotoUrl = uploadResult.BlobUri;
+                    }
                 }
-            }
 
-            string resumeUrl = null;
-            if (registrationDTO.Resume is not null)
-            {
-                var uploadResult = await _fileService.UploadAsync(registrationDTO.Resume);
-                if (uploadResult is not null)
+                string resumeUrl = null;
+                if (registrationDTO.Resume is not null)
                 {
-                    resumeUrl = uploadResult.BlobUri;
+                    var uploadResult = await _fileService.UploadAsync(registrationDTO.Resume);
+                    if (uploadResult is not null)
+                    {
+                        resumeUrl = uploadResult.BlobUri;
+                    }
                 }
-            }
 
-            var seeker = new Seeker
-            {
-                FirsName = registrationDTO.FirstName,
-                MiddleName = registrationDTO.MidName,
-                LastName = registrationDTO.LastName,
-                ProfilePhoto = profilePhotoUrl is null ? null : profilePhotoUrl,
-                ResumeUrl = resumeUrl is null ? null : resumeUrl,
-                SeekerSkills = allSkills.Select(skill => new SeekerSkill
+                var seeker = new Seeker
                 {
-                    Skill = skill
-                }).ToList(),
-                InterestCategoryId = categoryId,
-                UserId = user.Id
-            };
+                    FirsName = registrationDTO.FirstName,
+                    MiddleName = registrationDTO.MidName,
+                    LastName = registrationDTO.LastName,
+                    ProfilePhoto = profilePhotoUrl is null ? null : profilePhotoUrl,
+                    ResumeUrl = resumeUrl is null ? null : resumeUrl,
+                    SeekerSkills = allSkills.Select(skill => new SeekerSkill
+                    {
+                        Skill = skill
+                    }).ToList(),
+                    InterestCategoryId = categoryId,
+                    UserId = user.Id
+                };
 
-            await _context.TbSeekers.AddAsync(seeker);
-            await _context.SaveChangesAsync();
+                await _context.TbSeekers.AddAsync(seeker);
+                await _context.SaveChangesAsync();
 
-            //await transaction.CommitAsync();
+                await transaction.CommitAsync();
 
-            var confirmationToken = _userManager.GenerateEmailConfirmationTokenAsync(user).Result;
+                var confirmationToken = _userManager.GenerateEmailConfirmationTokenAsync(user).Result;
 
-            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.FirstName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.FirstName);
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.FirstName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.FirstName);
 
-            return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
+                return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
+                {
+                    Message = "There is a code have been sent to your email please check"
+                });
+            }
+            catch (Exception)
             {
-                Message = "There is a code have been sent to your email please check"
-            });
+                await transaction.RollbackAsync();
+
+                // 🔥 IMPORTANT: cleanup Identity user manually
+                if (user != null)
+                {
+                    await _userManager.DeleteAsync(user);
+                }
+
+                // Log ex here (ILogger)
+
+                return new ApiResponse<ConfirmationResponseDTO>(
+                    500,
+                    "Registration failed. Please try again."
+                );
+            }
+            
 
         }
 
-        public async Task<ApiResponse<UpdateProfileResponseDTO>> UpdateCandidateProfileAsync(int userId, UpdateProfileDTO dto)
+        public async Task<ApiResponse<CandidateResponseDTO>> UpdateCandidateProfileAsync(int userId, UpdateProfileDTO dto)
         {
             try
             {
@@ -239,27 +263,25 @@ namespace GoWork.Service.AccountService
                     }
                 }
 
-
-
                 await _context.SaveChangesAsync();
 
-                var user = await _userManager.FindByIdAsync(candidate.UserId.ToString());
-
-                FileDownloadDto fileDownloadDto = null;
+                List<FileDownloadDto> lstFillsDTO = new List<FileDownloadDto>();
                 if (candidate.ProfilePhoto is not null)
-                    fileDownloadDto = _fileService.DownloadUrlAsync(candidate.ProfilePhoto);
+                    lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ProfilePhoto));
+
+                if (candidate.ResumeUrl is not null)
+                    lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ResumeUrl));
 
                 // =========================
                 // Return updated profile
                 // =========================
-                return new ApiResponse<UpdateProfileResponseDTO>(200, new UpdateProfileResponseDTO
+                return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
                 {
                     FirstName = candidate.FirsName,
                     MiddleName = candidate.MiddleName,
                     LastName = candidate.LastName,
-                    Emial = user.Email,
-                    ProfilePhotoUrl = fileDownloadDto is null ? null : fileDownloadDto.SasUrl,
-                    Role = "Candidate",
+                    ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
+                    ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
                     Skills = candidate.SeekerSkills?
                     .Where(cs => cs.Skill != null)
                     .Select(cs => cs.Skill!.Name)
@@ -268,12 +290,12 @@ namespace GoWork.Service.AccountService
             }
             catch (Exception)
             {
-                return new ApiResponse<UpdateProfileResponseDTO>(500, "An error occurred while updating the profile.");
+                return new ApiResponse<CandidateResponseDTO>(500, "An error occurred while updating the profile.");
             }
             
         }
 
-        public async Task<ApiResponse<CandidateProfileResponseDTO>> GetCandidateProfileAsync(int userId)
+        public async Task<ApiResponse<CandidateResponseDTO>> GetCandidateProfileAsync(int userId)
         {
             var candidate = await _context.TbSeekers
                 .Include(c => c.SeekerSkills)
@@ -281,7 +303,7 @@ namespace GoWork.Service.AccountService
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (candidate == null)
-                return new ApiResponse<CandidateProfileResponseDTO>(404, "Candidate not found.");
+                return new ApiResponse<CandidateResponseDTO>(404, "Candidate not found.");
 
             var user = await _userManager.FindByIdAsync(candidate.UserId.ToString());
 
@@ -292,7 +314,7 @@ namespace GoWork.Service.AccountService
             if (candidate.ResumeUrl is not null)
                 lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ResumeUrl));
 
-            return new ApiResponse<CandidateProfileResponseDTO>(200, new CandidateProfileResponseDTO
+            return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
             {
                 FirstName = candidate.FirsName,
                 MiddleName = string.IsNullOrEmpty(candidate.MiddleName) ? null : candidate.MiddleName,
@@ -379,16 +401,16 @@ namespace GoWork.Service.AccountService
                 Message = "There is a code have been sent to your email please check"
             });
         }
-        public async Task<ApiResponse<CandidateResponseDTO>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
+        public async Task<ApiResponse<CandidateResponseDTO2>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (string.IsNullOrEmpty(confirmationDTO.Email) || string.IsNullOrEmpty(confirmationDTO.EmailConfirmationCode))
-                return new ApiResponse<CandidateResponseDTO>(400, "Email or Confimation Code is missing !");
+                return new ApiResponse<CandidateResponseDTO2>(400, "Email or Confimation Code is missing !");
 
             var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
 
             if (user is null)
             {
-                return new ApiResponse<CandidateResponseDTO>(400, "User Nou Found.");
+                return new ApiResponse<CandidateResponseDTO2>(400, "User Nou Found.");
             }
 
             var isVerfied = await _userManager.ConfirmEmailAsync(user, confirmationDTO.EmailConfirmationCode);
@@ -399,11 +421,11 @@ namespace GoWork.Service.AccountService
                 var candidate = _context.TbSeekers.FirstOrDefault(c => c.UserId == user.Id);
 
                 if (candidate is null)
-                    return new ApiResponse<CandidateResponseDTO>(400, "Candidate profile not found.");
+                    return new ApiResponse<CandidateResponseDTO2>(400, "Candidate profile not found.");
 
                 if (candidate.ProfilePhoto is null)
                 {
-                    return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
+                    return new ApiResponse<CandidateResponseDTO2>(200, new CandidateResponseDTO2
                     {
                         CandidateId = candidate.Id,
                         Email = user.Email,
@@ -414,7 +436,7 @@ namespace GoWork.Service.AccountService
 
                 var downLoadResult = _fileService.DownloadUrlAsync(candidate.ProfilePhoto);
 
-                return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
+                return new ApiResponse<CandidateResponseDTO2>(200, new CandidateResponseDTO2
                 {
                     CandidateId = candidate.Id,
                     Email = user.Email,
@@ -427,7 +449,7 @@ namespace GoWork.Service.AccountService
             }
             else
             {
-                return new ApiResponse<CandidateResponseDTO>(400, "Email verification failed. Please check the confirmation code and try again.");
+                return new ApiResponse<CandidateResponseDTO2>(400, "Email verification failed. Please check the confirmation code and try again.");
             }
         }
 
