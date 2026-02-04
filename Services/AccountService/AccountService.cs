@@ -624,7 +624,8 @@ namespace GoWork.Service.AccountService
                 return new ApiResponse<ConfirmationResponseDTO>(400,"Invalid request"); // Prevent account enumeration
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token);
+            //var encodedToken = WebUtility.UrlEncode(token);
+            var encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(token));
 
             var resetUrl = $"{_frontendBaseUrl}?email={forgetpasswordDTO.Email}&token={encodedToken}";
 
@@ -644,7 +645,8 @@ namespace GoWork.Service.AccountService
             if (user == null)
                 return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request");
 
-            var decodedToken = WebUtility.UrlDecode(resetpasswordDTO.Token);
+            //var decodedToken = WebUtility.UrlDecode(resetpasswordDTO.Token);
+            var decodedToken = Encoding.UTF8.GetString(Convert.FromBase64String(resetpasswordDTO.Token));
 
             var result = await _userManager.ResetPasswordAsync(user, decodedToken, resetpasswordDTO.NewPassword);
 
