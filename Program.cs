@@ -122,7 +122,8 @@ namespace GoWork
                 {
                     policy.WithOrigins(
                             "http://localhost:3000",
-                            "https://go-work-next-js.vercel.app"
+                            "https://go-work-next-js.vercel.app",
+                            "https://masarak.app"
                         ).AllowAnyHeader().AllowAnyMethod().AllowCredentials(); 
 
                 });
