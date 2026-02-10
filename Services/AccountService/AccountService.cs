@@ -38,6 +38,122 @@ namespace GoWork.Service.AccountService
             _frontendBaseUrl = configuration["Frontend:BaseUrl"];
         }
 
+        //public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
+        //{
+        //    await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        //    ApplicationUser user = null;
+        //    try
+        //    {
+        //        var categoryId = int.Parse(registrationDTO.InterstedInCategoryId);
+
+        //        if (_context.TbCategories.FirstOrDefault(c => c.Id == categoryId) is null)
+        //            return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid category ID.");
+
+        //        user = new ApplicationUser
+        //        {
+        //            UserName = registrationDTO.Email,
+        //            Email = registrationDTO.Email,
+        //            PhoneNumber = registrationDTO.PhoneNumber,
+        //        };
+
+        //        var result = await _userManager.CreateAsync(user, registrationDTO.Password);
+
+        //        if (!result.Succeeded)
+        //            return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+
+        //        // 2️⃣ Handle skills
+        //        var normalizedSkills = registrationDTO.ListOfSkills
+        //            .Select(s => s.Trim().ToLower())
+        //            .Distinct()
+        //            .ToList();
+
+        //        var existingSkills = _context.TbSkills
+        //            .Where(s => normalizedSkills.Contains(s.Name.ToLower()))
+        //            .ToList();
+
+        //        var existingSkillNames = existingSkills
+        //            .Select(s => s.Name.ToLower())
+        //            .ToHashSet();
+
+        //        var newSkills = normalizedSkills
+        //            .Where(s => !existingSkillNames.Contains(s))
+        //            .Select(s => new Skill { Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(s) })
+        //            .ToList();
+
+        //        _context.TbSkills.AddRange(newSkills);
+        //        var allSkills = existingSkills.Concat(newSkills).ToList();
+
+        //        string profilePhotoUrl = null;
+        //        if (registrationDTO.ProfilePhoto is not null)
+        //        {
+        //            var uploadResult = await _fileService.UploadAsync(registrationDTO.ProfilePhoto);
+        //            if (uploadResult is not null)
+        //            {
+        //                profilePhotoUrl = uploadResult.BlobUri;
+        //            }
+        //        }
+
+        //        string resumeUrl = null;
+        //        if (registrationDTO.Resume is not null)
+        //        {
+        //            var uploadResult = await _fileService.UploadAsync(registrationDTO.Resume);
+        //            if (uploadResult is not null)
+        //            {
+        //                resumeUrl = uploadResult.BlobUri;
+        //            }
+        //        }
+
+        //        var seeker = new Seeker
+        //        {
+        //            FirsName = registrationDTO.FirstName,
+        //            MiddleName = registrationDTO.MidName,
+        //            LastName = registrationDTO.LastName,
+        //            ProfilePhoto = profilePhotoUrl is null ? null : profilePhotoUrl,
+        //            ResumeUrl = resumeUrl is null ? null : resumeUrl,
+        //            SeekerSkills = allSkills.Select(skill => new SeekerSkill
+        //            {
+        //                Skill = skill
+        //            }).ToList(),
+        //            InterestCategoryId = categoryId,
+        //            UserId = user.Id
+        //        };
+
+        //        await _context.TbSeekers.AddAsync(seeker);
+        //        await _context.SaveChangesAsync();
+
+        //        await transaction.CommitAsync();
+
+        //        var confirmationToken = _userManager.GenerateEmailConfirmationTokenAsync(user).Result;
+
+        //        await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.FirstName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.FirstName);
+
+        //        return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
+        //        {
+        //            Message = "There is a code have been sent to your email please check"
+        //        });
+        //    }
+        //    catch (Exception)
+        //    {
+        //        await transaction.RollbackAsync();
+
+        //        // 🔥 IMPORTANT: cleanup Identity user manually
+        //        if (user != null)
+        //        {
+        //            await _userManager.DeleteAsync(user);
+        //        }
+
+        //        // Log ex here (ILogger)
+
+        //        return new ApiResponse<ConfirmationResponseDTO>(
+        //            500,
+        //            "Registration failed. Please try again."
+        //        );
+        //    }
+
+
+        //}
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -126,7 +242,52 @@ namespace GoWork.Service.AccountService
 
                 var confirmationToken = _userManager.GenerateEmailConfirmationTokenAsync(user).Result;
 
-                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.FirstName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.FirstName);
+                var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='ar'>
+<head>
+  <meta charset='UTF-8'>
+</head>
+<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
+  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+
+    <h2 style='color:#333;'>تأكيد البريد الإلكتروني</h2>
+
+    <p style='color:#555;'>
+      مرحبًا {registrationDTO.FirstName},<br/>
+      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+    </p>
+
+    <div style='text-align:center; margin:30px 0;'>
+      <span style='display:inline-block; 
+                   background-color:#2563eb; 
+                   color:#ffffff; 
+                   font-size:24px; 
+                   font-weight:bold; 
+                   padding:15px 25px; 
+                   border-radius:6px; 
+                   letter-spacing:4px;'>
+        {confirmationToken}
+      </span>
+    </div>
+
+    <p style='color:#888; font-size:14px;'>
+      هذا الرمز صالح لفترة محدودة.
+    </p>
+
+    <p style='color:#888; font-size:14px;'>
+      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+    </p>
+
+    <p style='color:#aaa; font-size:12px; text-align:left; direction:ltr;'>
+      © Masarak.
+    </p>
+
+  </div>
+</body>
+</html>";
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.FirstName);
 
                 return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
                 {
@@ -150,7 +311,7 @@ namespace GoWork.Service.AccountService
                     "Registration failed. Please try again."
                 );
             }
-            
+
 
         }
 
@@ -355,6 +516,53 @@ namespace GoWork.Service.AccountService
         //    });
         //}
 
+        //public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
+        //{
+
+        //    var user = new ApplicationUser
+        //    {
+        //        UserName = registrationDTO.Email,
+        //        Email = registrationDTO.Email,
+        //        PhoneNumber = registrationDTO.PhoneNumber,
+        //    };
+
+        //    var result = await _userManager.CreateAsync(user, registrationDTO.Password);
+
+        //    if (!result.Succeeded)
+        //        return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+
+        //    string logoUrl = null;
+        //    if (registrationDTO.LogoUrl is not null)
+        //    {
+        //        var uploadResult = await _fileService.UploadAsync(registrationDTO.LogoUrl);
+        //        if (uploadResult is not null)
+        //        {
+        //            logoUrl = uploadResult.BlobUri;
+        //        }
+        //    }
+
+        //    var employer = new Employer
+        //    {
+        //        UserId = user.Id,
+        //        ComapnyName = registrationDTO.CompanyName,
+        //        Industry = registrationDTO.Industry,
+        //        LogoUrl = logoUrl,
+        //        EmployerStatusId = (int)EmployerStatusEnum.PendingApproval,
+        //    };
+
+
+        //    await _context.TbEmployers.AddAsync(employer);
+        //    await _context.SaveChangesAsync();
+
+        //    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+        //    await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.CompanyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.CompanyName);
+        //    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+        //    {
+        //        Message = "There is a code have been sent to your email please check"
+        //    });
+        //}
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
         {
 
@@ -395,7 +603,54 @@ namespace GoWork.Service.AccountService
 
             var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {registrationDTO.CompanyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", registrationDTO.CompanyName);
+            var htmlBody = $@"
+<!DOCTYPE html>
+<html lang='ar'>
+<head>
+  <meta charset='UTF-8'>
+</head>
+<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
+  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+
+    <h2 style='color:#333;'>تأكيد البريد الإلكتروني</h2>
+
+    <p style='color:#555;'>
+      مرحبًا {registrationDTO.CompanyName},<br/>
+      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+    </p>
+
+    <div style='text-align:center; margin:30px 0;'>
+      <span style='display:inline-block; 
+                   background-color:#2563eb; 
+                   color:#ffffff; 
+                   font-size:24px; 
+                   font-weight:bold; 
+                   padding:15px 25px; 
+                   border-radius:6px; 
+                   letter-spacing:4px;'>
+        {confirmationToken}
+      </span>
+    </div>
+
+    <p style='color:#888; font-size:14px;'>
+      هذا الرمز صالح لفترة محدودة.
+    </p>
+
+    <p style='color:#888; font-size:14px;'>
+      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+    </p>
+
+    <p style='color:#aaa; font-size:12px; text-align:left; direction:ltr;'>
+      © Masarak.
+    </p>
+
+  </div>
+</body>
+</html>";
+
+
+
+            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.CompanyName);
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
                 Message = "There is a code have been sent to your email please check"
@@ -615,13 +870,36 @@ namespace GoWork.Service.AccountService
 
         }
 
+        //public async Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(ForgetPasswordDTO forgetpasswordDTO)
+        //{
+
+        //    var user = await _userManager.FindByEmailAsync(forgetpasswordDTO.Email);
+
+        //    if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+        //        return new ApiResponse<ConfirmationResponseDTO>(400,"Invalid request"); // Prevent account enumeration
+
+        //    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        //    //var encodedToken = WebUtility.UrlEncode(token);
+        //    var encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(token));
+
+        //    var resetUrl = $"{_frontendBaseUrl}?email={forgetpasswordDTO.Email}&token={encodedToken}";
+
+        //    await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", $"Click here: {resetUrl}");
+
+        //    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+        //    {
+        //        Message = "There is a link have been sent to your email please check"
+        //    });
+
+        //}
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> ForgetPassword(ForgetPasswordDTO forgetpasswordDTO)
         {
-            
+
             var user = await _userManager.FindByEmailAsync(forgetpasswordDTO.Email);
 
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
-                return new ApiResponse<ConfirmationResponseDTO>(400,"Invalid request"); // Prevent account enumeration
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request"); // Prevent account enumeration
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             //var encodedToken = WebUtility.UrlEncode(token);
@@ -629,7 +907,89 @@ namespace GoWork.Service.AccountService
 
             var resetUrl = $"{_frontendBaseUrl}?email={forgetpasswordDTO.Email}&token={encodedToken}";
 
-            await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", $"Click here: {resetUrl}");
+            var htmlBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='UTF-8'>
+</head>
+<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px;'>
+  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px;'>
+    
+    <h2 style='color:#333;'>Reset your password</h2>
+
+    <p style='color:#555;'>
+      We received a request to reset your password. Click the button below to continue.
+    </p>
+
+    <div style='text-align:center; margin:30px 0;'>
+      <a href='{resetUrl}'
+         style='background-color:#2563eb;
+                color:#ffffff;
+                padding:14px 24px;
+                text-decoration:none;
+                font-weight:bold;
+                border-radius:6px;
+                display:inline-block;'>
+        Reset Password
+      </a>
+    </div>
+
+    <p style='color:#888; font-size:14px;'>
+      If you didn’t request this, you can safely ignore this email.
+    </p>
+
+    <p style='color:#aaa; font-size:12px;'>
+      © Masarak.
+    </p>
+
+  </div>
+</body>
+</html>";
+            var htmlBodyAR = $@"
+<!DOCTYPE html>
+<html lang='ar'>
+<head>
+  <meta charset='UTF-8'>
+</head>
+<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
+  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+    
+    <h2 style='color:#333;'>إعادة تعيين كلمة المرور</h2>
+
+    <p style='color:#555;'>
+      تلقّينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.
+      اضغط على الزر أدناه للمتابعة.
+    </p>
+
+    <div style='text-align:center; margin:30px 0;'>
+      <a href='{resetUrl}'
+         style='background-color:#2563eb;
+                color:#ffffff;
+                padding:14px 24px;
+                text-decoration:none;
+                font-weight:bold;
+                border-radius:6px;
+                display:inline-block;'>
+        إعادة تعيين كلمة المرور
+      </a>
+    </div>
+
+    <p style='color:#888; font-size:14px;'>
+      إذا لم تقم بطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان.
+    </p>
+
+    <p style='color:#aaa; font-size:12px;text-align:left; direction:ltr '>
+      © Masarak.
+    </p>
+
+  </div>
+</body>
+</html>";
+
+
+
+            await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", htmlBodyAR);
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
