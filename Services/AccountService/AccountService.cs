@@ -154,6 +154,30 @@ namespace GoWork.Service.AccountService
 
         //}
 
+        private static string BuildArabicTemplate(string title, string bodyContent)
+        {
+            return $@"
+            <!DOCTYPE html>
+            <html lang='ar'>
+            <head>
+              <meta charset='UTF-8'>
+            </head>
+            <body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
+              <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+
+                <h2 style='color:#333;'>{title}</h2>
+
+                {bodyContent}
+
+                <p style='color:#aaa; font-size:12px;text-align:left; direction:ltr;'>
+                  © Masarak.
+                </p>
+
+              </div>
+            </body>
+            </html>";
+        }
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> CandidateRegisterAsync(CandidateRegistrationDTO registrationDTO)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -242,50 +266,34 @@ namespace GoWork.Service.AccountService
 
                 var confirmationToken = _userManager.GenerateEmailConfirmationTokenAsync(user).Result;
 
-                var htmlBody = $@"
-<!DOCTYPE html>
-<html lang='ar'>
-<head>
-  <meta charset='UTF-8'>
-</head>
-<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
-  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+                var content = $@"
+                            <p style='color:#555;'>
+                                مرحبًا {registrationDTO.FirstName},<br/>
+                                من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                            </p>
 
-    <h2 style='color:#333;'>تأكيد البريد الإلكتروني</h2>
+                            <div style='text-align:center; margin:30px 0;'>
+                                <span style='display:inline-block; 
+                                            background-color:#2563eb; 
+                                            color:#ffffff; 
+                                            font-size:24px; 
+                                            font-weight:bold; 
+                                            padding:15px 25px; 
+                                            border-radius:6px; 
+                                            letter-spacing:4px;'>
+                                {confirmationToken}
+                                </span>
+                            </div>
 
-    <p style='color:#555;'>
-      مرحبًا {registrationDTO.FirstName},<br/>
-      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
-    </p>
+                            <p style='color:#888; font-size:14px;'>
+                                هذا الرمز صالح لفترة محدودة.
+                            </p>
 
-    <div style='text-align:center; margin:30px 0;'>
-      <span style='display:inline-block; 
-                   background-color:#2563eb; 
-                   color:#ffffff; 
-                   font-size:24px; 
-                   font-weight:bold; 
-                   padding:15px 25px; 
-                   border-radius:6px; 
-                   letter-spacing:4px;'>
-        {confirmationToken}
-      </span>
-    </div>
+                            <p style='color:#888; font-size:14px;'>
+                                إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                            </p>";
 
-    <p style='color:#888; font-size:14px;'>
-      هذا الرمز صالح لفترة محدودة.
-    </p>
-
-    <p style='color:#888; font-size:14px;'>
-      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
-    </p>
-
-    <p style='color:#aaa; font-size:12px; text-align:left; direction:ltr;'>
-      © Masarak.
-    </p>
-
-  </div>
-</body>
-</html>";
+                var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
 
                 await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.FirstName);
 
@@ -603,51 +611,34 @@ namespace GoWork.Service.AccountService
 
             var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-            var htmlBody = $@"
-<!DOCTYPE html>
-<html lang='ar'>
-<head>
-  <meta charset='UTF-8'>
-</head>
-<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
-  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
+            var content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {registrationDTO.CompanyName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
 
-    <h2 style='color:#333;'>تأكيد البريد الإلكتروني</h2>
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
 
-    <p style='color:#555;'>
-      مرحبًا {registrationDTO.CompanyName},<br/>
-      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
-    </p>
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
 
-    <div style='text-align:center; margin:30px 0;'>
-      <span style='display:inline-block; 
-                   background-color:#2563eb; 
-                   color:#ffffff; 
-                   font-size:24px; 
-                   font-weight:bold; 
-                   padding:15px 25px; 
-                   border-radius:6px; 
-                   letter-spacing:4px;'>
-        {confirmationToken}
-      </span>
-    </div>
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
 
-    <p style='color:#888; font-size:14px;'>
-      هذا الرمز صالح لفترة محدودة.
-    </p>
-
-    <p style='color:#888; font-size:14px;'>
-      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
-    </p>
-
-    <p style='color:#aaa; font-size:12px; text-align:left; direction:ltr;'>
-      © Masarak.
-    </p>
-
-  </div>
-</body>
-</html>";
-
+            var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
 
 
             await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.CompanyName);
@@ -907,89 +898,33 @@ namespace GoWork.Service.AccountService
 
             var resetUrl = $"{_frontendBaseUrl}?email={forgetpasswordDTO.Email}&token={encodedToken}";
 
-            var htmlBody = $@"
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset='UTF-8'>
-</head>
-<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px;'>
-  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px;'>
-    
-    <h2 style='color:#333;'>Reset your password</h2>
+            var content = $@"
+                    <p style='color:#555;'>
+                      تلقّينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.
+                      اضغط على الزر أدناه للمتابعة.
+                    </p>
 
-    <p style='color:#555;'>
-      We received a request to reset your password. Click the button below to continue.
-    </p>
+                    <div style='text-align:center; margin:30px 0;'>
+                      <a href='{resetUrl}'
+                         style='background-color:#2563eb;
+                                color:#ffffff;
+                                padding:14px 24px;
+                                text-decoration:none;
+                                font-weight:bold;
+                                border-radius:6px;
+                                display:inline-block;'>
+                        إعادة تعيين كلمة المرور
+                      </a>
+                    </div>
 
-    <div style='text-align:center; margin:30px 0;'>
-      <a href='{resetUrl}'
-         style='background-color:#2563eb;
-                color:#ffffff;
-                padding:14px 24px;
-                text-decoration:none;
-                font-weight:bold;
-                border-radius:6px;
-                display:inline-block;'>
-        Reset Password
-      </a>
-    </div>
-
-    <p style='color:#888; font-size:14px;'>
-      If you didn’t request this, you can safely ignore this email.
-    </p>
-
-    <p style='color:#aaa; font-size:12px;'>
-      © Masarak.
-    </p>
-
-  </div>
-</body>
-</html>";
-            var htmlBodyAR = $@"
-<!DOCTYPE html>
-<html lang='ar'>
-<head>
-  <meta charset='UTF-8'>
-</head>
-<body style='font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px; direction:rtl;'>
-  <div style='max-width:600px; margin:auto; background:#ffffff; padding:30px; border-radius:8px; text-align:right;'>
-    
-    <h2 style='color:#333;'>إعادة تعيين كلمة المرور</h2>
-
-    <p style='color:#555;'>
-      تلقّينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.
-      اضغط على الزر أدناه للمتابعة.
-    </p>
-
-    <div style='text-align:center; margin:30px 0;'>
-      <a href='{resetUrl}'
-         style='background-color:#2563eb;
-                color:#ffffff;
-                padding:14px 24px;
-                text-decoration:none;
-                font-weight:bold;
-                border-radius:6px;
-                display:inline-block;'>
-        إعادة تعيين كلمة المرور
-      </a>
-    </div>
-
-    <p style='color:#888; font-size:14px;'>
-      إذا لم تقم بطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان.
-    </p>
-
-    <p style='color:#aaa; font-size:12px;text-align:left; direction:ltr '>
-      © Masarak.
-    </p>
-
-  </div>
-</body>
-</html>";
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
 
 
+            var htmlBody = BuildArabicTemplate("إعادة تعيين كلمة المرور", content);
 
-            await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", htmlBodyAR);
+            await _emailService.SendEmailAsync(forgetpasswordDTO.Email, "Reset Password", htmlBody);
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
