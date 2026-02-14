@@ -34,8 +34,8 @@ namespace GoWork.Controllers.Auth
         private readonly IConfiguration _configuration;
         private readonly IAccountService _accountService;
         private readonly string _frontendBaseUrl;
-
-        public AccountController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration, IAccountService accountService)
+        private readonly IWebHostEnvironment _env;
+        public AccountController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService, IConfiguration configuration, IAccountService accountService, IWebHostEnvironment env)
         {
             _context = context;
             _userManager = userManager;
@@ -43,6 +43,7 @@ namespace GoWork.Controllers.Auth
             _configuration = configuration;
             _accountService = accountService;
             _frontendBaseUrl = configuration["Frontend:BaseUrl"];
+            _env = env;
         }
 
         [Authorize(Roles = "Admin")]
@@ -148,6 +149,64 @@ namespace GoWork.Controllers.Auth
             {
                 return BadRequest("Invalid Login data.");
             }
+            var clientType = Request.Headers["ClientType"].ToString();
+            if (clientType == "web")
+            {
+                var response = await _accountService.LoginCompany(loginDTO);
+                if (response.StatusCode != 200)
+                {
+                    return StatusCode((int)response.StatusCode, response);
+                }
+
+                //var token = response.Data.Token;
+                var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+                var token = _accountService.GenerateJwtToken(user);
+
+                //Response.Cookies.Append("access_token", token, new CookieOptions
+                //{
+                //    HttpOnly = true,
+                //    Secure = true,
+                //    SameSite = SameSiteMode.None,
+                //    Expires = DateTime.UtcNow.AddDays(7),
+                //    Path = "/"
+                //});
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Path = "/"
+                };
+
+                if (!_env.IsDevelopment())
+                {
+                    cookieOptions.Domain = ".masarak.app";
+                }
+
+                Response.Cookies.Append("access_token", token, cookieOptions);
+
+
+                return Ok(response);
+            }
+            else
+            {
+                var response = await _accountService.Login(loginDTO);
+                if (response.StatusCode != 200)
+                {
+                    return StatusCode((int)response.StatusCode, response);
+                }
+                return Ok(response);
+
+
+                //------
+
+
+                if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid Login data.");
+            }
 
             var response = await _accountService.LoginCompany(loginDTO);
             if (response.StatusCode != 200)
@@ -159,14 +218,31 @@ namespace GoWork.Controllers.Auth
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
             var token = _accountService.GenerateJwtToken(user);
 
-            Response.Cookies.Append("access_token", token, new CookieOptions
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(7),
                 Path = "/"
-            });
+            };
+
+            if (!_env.IsDevelopment())
+            {
+                cookieOptions.Domain = ".masarak.app";
+            }
+
+            Response.Cookies.Append("access_token", token, cookieOptions);
+
+            //Response.Cookies.Append("access_token", token, new CookieOptions
+            //{
+            //    HttpOnly = true,
+            //    Secure = true,
+            //    SameSite = SameSiteMode.None,
+            //    Expires = DateTime.UtcNow.AddDays(7),
+            //    Path = "/",
+            //    Domain = ".masarak.app"
+            //});
 
             return Ok(response);
         }
@@ -191,15 +267,32 @@ namespace GoWork.Controllers.Auth
             var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
             var token = _accountService.GenerateJwtToken(user);
 
-            // ✅ Inject cookie
-            Response.Cookies.Append("access_token", token, new CookieOptions
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(7),
                 Path = "/"
-            });
+            };
+
+            if (!_env.IsDevelopment())
+            {
+                cookieOptions.Domain = ".masarak.app";
+            }
+
+            Response.Cookies.Append("access_token", token, cookieOptions);
+
+            //// ✅ Inject cookie
+            //Response.Cookies.Append("access_token", token, new CookieOptions
+            //{
+            //    HttpOnly = true,
+            //    Secure = true,
+            //    SameSite = SameSiteMode.None,
+            //    Expires = DateTime.UtcNow.AddDays(7),
+            //    Path = "/",
+            //    Domain = ".masarak.app"
+            //});
 
             return Ok(response);
         }
@@ -209,13 +302,29 @@ namespace GoWork.Controllers.Auth
         [HttpPost("Logout")]
         public IActionResult Logout()
         {
-            Response.Cookies.Delete("access_token", new CookieOptions
+            //Response.Cookies.Delete("access_token", new CookieOptions
+            //{
+            //    HttpOnly = true,
+            //    Secure = true,
+            //    SameSite = SameSiteMode.None,
+            //    Path = "/",
+            //    Domain = ".masarak.app"
+            //});
+
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = !_env.IsDevelopment(),
+                SameSite = _env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
                 Path = "/"
-            });
+            };
+
+            if (!_env.IsDevelopment())
+            {
+                cookieOptions.Domain = ".masarak.app";
+            }
+
+            Response.Cookies.Delete("access_token", cookieOptions);
 
             return Ok("Logout Successfully");
         }
