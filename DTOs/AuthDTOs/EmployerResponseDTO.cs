@@ -8,5 +8,6 @@
         public DateTimeOffset ExpiresAt { get; set; } = DateTimeOffset.UtcNow;
         public string Role { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
+        public string PhoneNumber {  get; set; } = string.Empty;
     }
 }
