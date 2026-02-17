@@ -78,9 +78,8 @@ namespace GoWork.Controllers.Auth
                 {
                     Email = user.Email,
                     Role = role,
-                    CompanyName = null,
-                    PhoneNumber = user.PhoneNumber,
-                    SasUrl = null,
+                    CompanyName = "Masarak",
+                    PhoneNumber = user.PhoneNumber
                 };
 
                 return Ok(adminResponse);
