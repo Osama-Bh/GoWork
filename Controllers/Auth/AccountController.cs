@@ -75,6 +75,7 @@ namespace GoWork.Controllers.Auth
             .FirstOrDefaultAsync(e => e.UserId == user.Id);
 
             var LogoUrlRespons = _fileService.DownloadUrlAsync(employer.LogoUrl);
+
             var response = new EmployerResponseDTO
             {
                 Email = user.Email,
