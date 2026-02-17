@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -70,23 +71,41 @@ namespace GoWork.Controllers.Auth
                 return Unauthorized();
 
             var roles = await _userManager.GetRolesAsync(user);
-
-            var employer = await _context.TbEmployers
-            .FirstOrDefaultAsync(e => e.UserId == user.Id);
-
-            var LogoUrlRespons = _fileService.DownloadUrlAsync(employer.LogoUrl);
-
-            var response = new EmployerResponseDTO
+            var role = roles.FirstOrDefault();
+            if (role == "Admin")
             {
-                Email = user.Email,
-                Role = roles.FirstOrDefault(),
-                CompanyName = employer?.ComapnyName,
-                PhoneNumber = user.PhoneNumber,
-                SasUrl = LogoUrlRespons.SasUrl,
-                ExpiresAt = LogoUrlRespons.ExpiresAt
-            };
+                var adminResponse = new EmployerResponseDTO
+                {
+                    Email = user.Email,
+                    Role = role,
+                    CompanyName = null,
+                    PhoneNumber = user.PhoneNumber,
+                    SasUrl = null,
+                };
 
-            return Ok(response);
+                return Ok(adminResponse);
+            }
+            else
+            {
+                var employer = await _context.TbEmployers
+                .FirstOrDefaultAsync(e => e.UserId == user.Id);
+
+                var LogoUrlRespons = _fileService.DownloadUrlAsync(employer.LogoUrl);
+
+                var response = new EmployerResponseDTO
+                {
+                    Email = user.Email,
+                    Role = role,
+                    CompanyName = employer?.ComapnyName,
+                    PhoneNumber = user.PhoneNumber,
+                    SasUrl = LogoUrlRespons.SasUrl,
+                    ExpiresAt = LogoUrlRespons.ExpiresAt
+                };
+
+                return Ok(response);
+            }
+
+                
         }
 
         [HttpPost("Candidate/Register")]
