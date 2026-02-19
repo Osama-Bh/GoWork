@@ -16,6 +16,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace GoWork.Service.AccountService
@@ -573,6 +574,12 @@ namespace GoWork.Service.AccountService
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
         {
+            var UserFound = await _userManager.FindByEmailAsync(registrationDTO.Email);
+
+            if (UserFound is not null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "البريد الإلكتروني مستخدم بالفعل");
+            }
 
             var user = new ApplicationUser
             {
@@ -580,6 +587,10 @@ namespace GoWork.Service.AccountService
                 Email = registrationDTO.Email,
                 PhoneNumber = registrationDTO.PhoneNumber,
             };
+
+
+            
+
 
             var result = await _userManager.CreateAsync(user, registrationDTO.Password);
 
@@ -710,8 +721,21 @@ namespace GoWork.Service.AccountService
             if (!await _userManager.CheckPasswordAsync(user, loginDTO.Password))
                 return new ApiResponse<LoginResponseDTO>(400, "Invalid password.");
 
+            //if (!await _userManager.IsEmailConfirmedAsync(user))
+            //    return new ApiResponse<LoginResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
+
             if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {user?.UserName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", user.UserName);
+                //return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                //{
+                //    Message = "There is a code have been sent to your email please check"
+                //});
                 return new ApiResponse<LoginResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
+            }
 
             var token = GenerateJwtToken(user);
             return new ApiResponse<LoginResponseDTO>(200, new LoginResponseDTO { Token = token });
@@ -802,17 +826,49 @@ namespace GoWork.Service.AccountService
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
 
             if (user is null)
-                return new ApiResponse<EmployerResponseDTO>(404, "User not found.");
+                return new ApiResponse<EmployerResponseDTO>(400, "البريد الإلكتروني أو كلمة المرور غير صحيحة");
 
             if (!await _userManager.CheckPasswordAsync(user, loginDTO.Password))
-                return new ApiResponse<EmployerResponseDTO>(400, "Invalid password.");
+                return new ApiResponse<EmployerResponseDTO>(400, "البريد الإلكتروني أو كلمة المرور غير صحيحة");
 
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
                 var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
 
-                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {company?.ComapnyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", company.ComapnyName);
+                var content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {company.ComapnyName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+
+                var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
+
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, company.ComapnyName);
+
+                //await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {company?.ComapnyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", company.ComapnyName);
                 //return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
                 //{
                 //    Message = "There is a code have been sent to your email please check"
@@ -889,8 +945,11 @@ namespace GoWork.Service.AccountService
 
             var user = await _userManager.FindByEmailAsync(forgetpasswordDTO.Email);
 
-            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
-                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request"); // Prevent account enumeration
+            //if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+            //    return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request"); // Prevent account enumeration
+
+            if (user == null)
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Email Not Found, Go to register"); // Prevent account enumeration
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             //var encodedToken = WebUtility.UrlEncode(token);
