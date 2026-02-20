@@ -48,6 +48,54 @@ namespace GoWork.Controllers.Auth
             _fileService = fileService;
         }
 
+        [HttpGet("ListAllEmails")]
+        public async Task<IActionResult> GetInfo()
+        {
+            var emails = await _context.Users
+          .Select(u => u.Email)
+          .ToListAsync();
+
+            return Ok(emails);
+        }
+
+        [HttpDelete("DeleteByEmail")]
+        public async Task<IActionResult> DeleteByEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email is required.");
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            var employer = await _context.TbEmployers
+            .FirstOrDefaultAsync(e => e.UserId == user.Id);
+
+            if (employer != null)
+            {
+                _context.TbEmployers.Remove(employer);
+                await _context.SaveChangesAsync();
+            }
+
+            var Role = await _context.UserRoles
+            .FirstOrDefaultAsync(e => e.UserId == user.Id);
+
+            if (Role != null)
+            {
+                _context.UserRoles.Remove(Role);
+                await _context.SaveChangesAsync();
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok("User deleted successfully.");
+        }
+
+
         [Authorize(Roles = "Admin")]
         [HttpGet("AdminTest")]
         public IActionResult GetAdmin()
