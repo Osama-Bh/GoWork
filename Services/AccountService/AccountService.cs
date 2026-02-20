@@ -595,7 +595,7 @@ namespace GoWork.Service.AccountService
             var result = await _userManager.CreateAsync(user, registrationDTO.Password);
 
             if (!result.Succeeded)
-                return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+                return new ApiResponse<ConfirmationResponseDTO>(400, "حدث مشكلة في إنشاء الحساب،حاول مرة أخرى");
 
             string logoUrl = null;
             if (registrationDTO.LogoUrl is not null)
