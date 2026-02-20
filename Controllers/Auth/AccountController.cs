@@ -114,43 +114,110 @@ namespace GoWork.Controllers.Auth
         [HttpGet("Me")]
         public async Task<IActionResult> Me()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return Unauthorized();
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault();
-            if (role == "Admin")
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest("Invalid request data.");
+            //}
+            // Retrieve the CandidateId from the authenticated user's claims
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claims == null || !int.TryParse(claims.Value, out int Id))
             {
-                var adminResponse = new EmployerResponseDTO
+                return Unauthorized("Unauthorized: Id not found.");
+            }
+
+            var clientType = Request.Headers["ClientType"].ToString();
+            if (clientType == "web")
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
+
+                if (user == null)
+                    return NotFound("Not Found");
+
+                var role = User.FindFirstValue(ClaimTypes.Role);
+
+                if (role == "Admin")
+                {
+                    return Ok(new EmployerResponseDTO
+                    {
+                        Email = user.Email,
+                        Role = role,
+                        CompanyName = "Masarak",
+                        PhoneNumber = user.PhoneNumber
+                    });
+                }
+
+                var employer = await _context.TbEmployers
+                    .FirstOrDefaultAsync(e => e.UserId == user.Id);
+
+                if (employer == null)
+                    return NotFound("Employer profile not found.");
+
+                var logoUrlResponse =  _fileService
+                    .DownloadUrlAsync(employer.LogoUrl);
+
+                return Ok(new EmployerResponseDTO
                 {
                     Email = user.Email,
                     Role = role,
-                    CompanyName = "Masarak",
-                    PhoneNumber = user.PhoneNumber
-                };
-
-                return Ok(adminResponse);
+                    CompanyName = employer.ComapnyName,
+                    PhoneNumber = user.PhoneNumber,
+                    SasUrl = logoUrlResponse.SasUrl,
+                    ExpiresAt = logoUrlResponse.ExpiresAt,
+                    Industry = employer.Industry
+                });
             }
             else
             {
-                var employer = await _context.TbEmployers
-                .FirstOrDefaultAsync(e => e.UserId == user.Id);
-
-                var LogoUrlRespons = _fileService.DownloadUrlAsync(employer.LogoUrl);
-
-                var response = new EmployerResponseDTO
+                var response = await _accountService.GetCandidateProfileAsync(Id);
+                if (response.StatusCode != 200)
                 {
-                    Email = user.Email,
-                    Role = role,
-                    CompanyName = employer?.ComapnyName,
-                    PhoneNumber = user.PhoneNumber,
-                    SasUrl = LogoUrlRespons.SasUrl,
-                    ExpiresAt = LogoUrlRespons.ExpiresAt
-                };
-
+                    return StatusCode((int)response.StatusCode, response);
+                }
                 return Ok(response);
             }
+
+
+
+
+            //var user = await _userManager.GetUserAsync(User);
+            //if (user == null)
+            //    return Unauthorized();
+
+            //var roles = await _userManager.GetRolesAsync(user);
+            //var role = roles.FirstOrDefault();
+            //if (role == "Admin")
+            //{
+            //    var adminResponse = new EmployerResponseDTO
+            //    {
+            //        Email = user.Email,
+            //        Role = role,
+            //        CompanyName = "Masarak",
+            //        PhoneNumber = user.PhoneNumber
+            //    };
+
+            //    return Ok(adminResponse);
+            //}
+            //else
+            //{
+            //    var employer = await _context.TbEmployers
+            //    .FirstOrDefaultAsync(e => e.UserId == user.Id);
+
+            //    var LogoUrlRespons = _fileService.DownloadUrlAsync(employer.LogoUrl);
+
+            //    var response = new EmployerResponseDTO
+            //    {
+            //        Email = user.Email,
+            //        Role = role,
+            //        CompanyName = employer?.ComapnyName,
+            //        PhoneNumber = user.PhoneNumber,
+            //        SasUrl = LogoUrlRespons.SasUrl,
+            //        ExpiresAt = LogoUrlRespons.ExpiresAt,
+            //        Industry = employer.Industry
+            //    };
+
+            //    return Ok(response);
+            //}
 
                 
         }
