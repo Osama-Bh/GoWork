@@ -1284,5 +1284,183 @@ namespace GoWork.Service.AccountService
                 });
             }
         }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> ResendOtpAsync(ResendOtpDTO resendDto)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == resendDto.Email);
+
+                // Always return success message (security reason)
+                if (user is null)
+                {
+                    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                    {
+                        Message = "If the email exists, OTP has been sent."
+                    });
+                }
+
+                if (user.EmailConfirmed)
+                {
+                    return new ApiResponse<ConfirmationResponseDTO>(400,new ConfirmationResponseDTO
+                    {
+                        Message = "Email already verified."
+                    });
+                }
+
+                
+
+                var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+                var content = "";
+
+                if(company is not null)
+                {
+                    // This if the user that try to resend the otp to is company
+
+                    content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {company.ComapnyName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+                }
+                else
+                {
+                    // This if the user that try to resend the otp to is candidate
+                    content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {user.UserName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+                }
+
+
+                var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
+
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, company.ComapnyName);
+
+                return new ApiResponse<ConfirmationResponseDTO>(200,
+                    new ConfirmationResponseDTO
+                    {
+                        Message = "OTP has been sent."
+                    });
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(500,new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while resending OTP."
+                });
+            }
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> ResendLinkAsync(ResendOtpDTO resendDto)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == resendDto.Email);
+
+                // Always return success message (security reason)
+                if (user is null)
+                {
+                    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                    {
+                        Message = "If the email exists, Link has been sent."
+                    });
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                //var encodedToken = WebUtility.UrlEncode(token);
+                var encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(token));
+
+                var resetUrl = $"{_frontendBaseUrl}?email={resendDto.Email}&token={encodedToken}";
+
+                var content = $@"
+                    <p style='color:#555;'>
+                      تلقّينا طلبًا لإعادة تعيين كلمة المرور الخاصة بحسابك.
+                      اضغط على الزر أدناه للمتابعة.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <a href='{resetUrl}'
+                         style='background-color:#2563eb;
+                                color:#ffffff;
+                                padding:14px 24px;
+                                text-decoration:none;
+                                font-weight:bold;
+                                border-radius:6px;
+                                display:inline-block;'>
+                        إعادة تعيين كلمة المرور
+                      </a>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+
+
+                var htmlBody = BuildArabicTemplate("إعادة تعيين كلمة المرور", content);
+
+                await _emailService.SendEmailAsync(resendDto.Email, "Reset Password", htmlBody);
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "There is a link have been sent to your email please check"
+                });
+
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(500, new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while resending Link."
+                });
+            }
+        }
     }
 }
