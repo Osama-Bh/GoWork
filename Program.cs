@@ -11,6 +11,7 @@ using System;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 namespace GoWork
 {
@@ -131,6 +132,21 @@ namespace GoWork
             );
             #endregion
 
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.AddPolicy("ResendPolicy", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: context.Request.Form["Email"].ToString() ??
+                                      context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 3,              // max 3 requests
+                            Window = TimeSpan.FromMinutes(5),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -151,6 +167,8 @@ namespace GoWork
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.UseRateLimiter();
 
             app.Run();
         }

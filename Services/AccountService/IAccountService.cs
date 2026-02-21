@@ -56,7 +56,7 @@ namespace GoWork.Service.AccountService
         Task<ApiResponse<ConfirmationResponseDTO>> ChangePasswordAsync(int userId, ChangePasswordDTO changePasswordDto);
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateCompanyProfileAsync(int userId, UpdateCompanyProfileDTO dto);
 
-
+        Task<ApiResponse<ConfirmationResponseDTO>> ResendOtpAsync(ResendOtpDTO resendDto);
 
 
         // Token

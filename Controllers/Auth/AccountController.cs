@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -56,6 +57,40 @@ namespace GoWork.Controllers.Auth
           .ToListAsync();
 
             return Ok(emails);
+        }
+
+        [EnableRateLimiting("ResendPolicy")]
+        [HttpGet("ResendOtp")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ResendOtp(ResendOtpDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var response = await _accountService.ResendOtpAsync(dto);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+
+            return Ok(response);
+        }
+
+        [EnableRateLimiting("ResendPolicy")]
+        [HttpGet("ResendLink")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ResendResetPasswordLing(ResendOtpDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var response = await _accountService.ResendOtpAsync(dto);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+
+            return Ok(response);
         }
 
         [HttpDelete("DeleteByEmail")]
