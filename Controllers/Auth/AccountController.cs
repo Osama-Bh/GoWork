@@ -124,7 +124,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [Authorize]
-        [HttpPost("ChangePassword")]
+        [HttpPatch("ChangePassword")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ChangePassword(ChangePasswordDTO changePasswordDto)
         {
             var claims = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -149,7 +149,7 @@ namespace GoWork.Controllers.Auth
         }
 
         [Authorize]
-        [HttpPost("UpdateProfile")]
+        [HttpPatch("UpdateProfile")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateCompanyProfile(UpdateCompanyProfileDTO updateCompanyProfileDTO)
         {
             var claims = User.FindFirst(ClaimTypes.NameIdentifier);

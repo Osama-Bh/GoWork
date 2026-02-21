@@ -1252,6 +1252,7 @@ namespace GoWork.Service.AccountService
                 // Update fields
                 user.PhoneNumber = dto.Phone;
                 employer.Industry = dto.Industry;
+                employer.ComapnyName = dto.CompanyName;
 
                 if (dto.LogoUrl is not null)
                 {
