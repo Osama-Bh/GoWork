@@ -201,7 +201,11 @@ namespace GoWork.Service.AccountService
                 var result = await _userManager.CreateAsync(user, registrationDTO.Password);
 
                 if (!result.Succeeded)
-                    return new ApiResponse<ConfirmationResponseDTO>(400, "User creation failed! Please check user details and try again.");
+                {
+                    var lstErrors = result.Errors.Select(e => e.Description).ToList();
+
+                    return new ApiResponse<ConfirmationResponseDTO>(400, lstErrors);
+                }
 
                 // 2️⃣ Handle skills
                 var normalizedSkills = registrationDTO.ListOfSkills
