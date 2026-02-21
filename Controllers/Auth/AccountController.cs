@@ -95,6 +95,83 @@ namespace GoWork.Controllers.Auth
             return Ok("User deleted successfully.");
         }
 
+        [Authorize]
+        [HttpDelete("DeleteAccount")]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claims == null || !int.TryParse(claims.Value, out int Id))
+            {
+                return Unauthorized("Unauthorized: Id not found.");
+            }
+
+            var response = await _accountService.DeleteAccountAsync(Id);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/",
+                Domain = ".masarak.app"
+            });
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ChangePassword(ChangePasswordDTO changePasswordDto)
+        {
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claims == null || !int.TryParse(claims.Value, out int userId))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                {
+                    Message = "Unauthorized: Id not found."
+                });
+            }
+
+            var response  = await _accountService.ChangePasswordAsync(userId, changePasswordDto);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+
+            }
+
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpPost("UpdateProfile")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateCompanyProfile(UpdateCompanyProfileDTO updateCompanyProfileDTO)
+        {
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claims == null || !int.TryParse(claims.Value, out int userId))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                {
+                    Message = "Unauthorized: Id not found."
+                });
+            }
+
+            var response = await _accountService.UpdateCompanyProfileAsync(userId, updateCompanyProfileDTO);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+
+            }
+
+            return Ok(response);
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("AdminTest")]

@@ -1152,5 +1152,132 @@ namespace GoWork.Service.AccountService
                 return new ApiResponse<FileDownloadDto>(500, "An error occurred while generating the download URL.");
             }
         }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> DeleteAccountAsync(int userId)
+        {
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                {
+                    Message = "User Not Found"
+                });
+
+            var employer = await _context.TbEmployers
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+            if (employer != null)
+                _context.TbEmployers.Remove(employer);
+
+            var role = await _context.UserRoles
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+            if (role != null)
+                _context.UserRoles.Remove(role);
+
+            await _context.SaveChangesAsync();
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+                return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
+                {
+                    Message = "User Deletion Failed"
+                });
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "User Deleted Successfully"
+            });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> ChangePasswordAsync(int userId,ChangePasswordDTO changePasswordDto)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId.ToString());
+
+                if (user is null)
+                    return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                    {
+                        Message = "User Not Found"
+                    });
+
+                var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.OldPassword, changePasswordDto.NewPassword);
+
+                if (!result.Succeeded)
+                    return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
+                    {
+                        Message = "Password change failed."
+                    });
+
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "Password changed successfully."
+                });
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(500, new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while changing the password."
+                });
+            }
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>>UpdateCompanyProfileAsync(int userId, UpdateCompanyProfileDTO dto)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user is null)
+                    return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                    {
+                        Message = "User not found."
+                    });
+
+                var employer = await _context.TbEmployers
+                    .FirstOrDefaultAsync(e => e.UserId == userId);
+
+                if (employer is null)
+                    return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                    {
+                        Message = "Employer profile not found."
+                    });
+
+                // Update fields
+                user.PhoneNumber = dto.Phone;
+                employer.Industry = dto.Industry;
+
+                if (dto.LogoUrl is not null)
+                {
+                    var uploadResult = await _fileService.UploadAsync(dto.LogoUrl);
+                    if (uploadResult is not null)
+                    {
+                        employer.LogoUrl = uploadResult.BlobUri;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "Account Updated Successfully"
+                });
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(500,new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while updating the profile." 
+                });
+            }
+        }
     }
 }
