@@ -1250,7 +1250,7 @@ namespace GoWork.Service.AccountService
                     });
 
                 // Update fields
-                user.PhoneNumber = dto.Phone;
+                user.PhoneNumber = dto.PhoneNumber;
                 employer.Industry = dto.Industry;
                 employer.ComapnyName = dto.CompanyName;
 
