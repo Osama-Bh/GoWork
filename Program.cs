@@ -132,20 +132,26 @@ namespace GoWork
             );
             #endregion
 
-            builder.Services.AddRateLimiter(options =>
-            {
-                options.AddPolicy("ResendPolicy", context =>
-                    RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: context.Request.Form["Email"].ToString() ??
-                                      context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                        factory: _ => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = 3,              // max 3 requests
-                            Window = TimeSpan.FromMinutes(5),
-                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                            QueueLimit = 0
-                        }));
-            });
+            //builder.Services.AddRateLimiter(options =>
+            //{
+            //    options.AddPolicy("OtpPolicy", context =>
+            //    {
+            //        var email = context.Request.Query["email"].ToString();
+
+            //        if (string.IsNullOrEmpty(email))
+            //            email = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            //        return RateLimitPartition.GetFixedWindowLimiter(
+            //            partitionKey: email,
+            //            factory: _ => new FixedWindowRateLimiterOptions
+            //            {
+            //                PermitLimit = 3,
+            //                Window = TimeSpan.FromMinutes(5),
+            //                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            //                QueueLimit = 0
+            //            });
+            //    });
+            //});
 
             var app = builder.Build();
 
@@ -168,7 +174,7 @@ namespace GoWork
 
             app.MapControllers();
 
-            app.UseRateLimiter();
+            //app.UseRateLimiter();
 
             app.Run();
         }

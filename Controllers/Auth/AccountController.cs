@@ -59,8 +59,8 @@ namespace GoWork.Controllers.Auth
             return Ok(emails);
         }
 
-        [EnableRateLimiting("ResendPolicy")]
-        [HttpGet("ResendOtp")]
+        //[EnableRateLimiting("ResendPolicy")]
+        [HttpPost("ResendOtp")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ResendOtp(ResendOtpDTO dto)
         {
             if (!ModelState.IsValid)
@@ -76,8 +76,8 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-        [EnableRateLimiting("ResendPolicy")]
-        [HttpGet("ResendLink")]
+        //[EnableRateLimiting("ResendPolicy")]
+        [HttpPost("ResendLink")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ResendResetPasswordLing(ResendOtpDTO dto)
         {
             if (!ModelState.IsValid)
