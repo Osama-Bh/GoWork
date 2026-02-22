@@ -877,7 +877,7 @@ namespace GoWork.Service.AccountService
                 //{
                 //    Message = "There is a code have been sent to your email please check"
                 //});
-                return new ApiResponse<EmployerResponseDTO>(401, "Email is not confirmed. Please verify your email before logging in.");
+                return new ApiResponse<EmployerResponseDTO>(401, "");
             }
 
 
@@ -1254,9 +1254,18 @@ namespace GoWork.Service.AccountService
                     });
 
                 // Update fields
-                user.PhoneNumber = dto.PhoneNumber;
-                employer.Industry = dto.Industry;
-                employer.ComapnyName = dto.CompanyName;
+                if(user.PhoneNumber != dto.PhoneNumber)
+                {
+                    user.PhoneNumber = dto.PhoneNumber;
+                }
+                if(employer.Industry != dto.Industry)
+                {
+                    employer.Industry = dto.Industry;
+                }
+                if(employer.ComapnyName != dto.CompanyName)
+                {
+                    employer.ComapnyName = dto.CompanyName;
+                }
 
                 if (dto.LogoUrl is not null)
                 {
