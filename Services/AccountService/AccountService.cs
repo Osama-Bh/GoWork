@@ -600,7 +600,7 @@ namespace GoWork.Service.AccountService
             var employer = new Employer
             {
                 UserId = user.Id,
-                ComapnyName = registrationDTO.CompanyName,
+                ComapnyName = registrationDTO.Name,
                 Industry = registrationDTO.Industry,
                 LogoUrl = logoUrl,
                 EmployerStatusId = (int)EmployerStatusEnum.PendingApproval,
@@ -614,7 +614,7 @@ namespace GoWork.Service.AccountService
 
             var content = $@"
                     <p style='color:#555;'>
-                      مرحبًا {registrationDTO.CompanyName},<br/>
+                      مرحبًا {registrationDTO.Name},<br/>
                       من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
                     </p>
 
@@ -642,7 +642,7 @@ namespace GoWork.Service.AccountService
             var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
 
 
-            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.CompanyName);
+            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, registrationDTO.Name);
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
                 Message = "There is a code have been sent to your email please check"
