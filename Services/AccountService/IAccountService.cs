@@ -50,8 +50,8 @@ namespace GoWork.Service.AccountService
 
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory);
 
-        Task<ApiResponse<FileDownloadDto>> DownloadFile(int userId, FileCategoryEnum fileCategory);
-        Task<ApiResponse<ConfirmationResponseDTO>> UploadResume(UploadFileRequestDTO requestDTO);
+        Task<ApiResponse<FileDownloadDto>> DownloadCandidateProfilePicOrResume(int userId, FileCategoryEnum fileCategory);
+        Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(IFormFile file, int userId);
         Task<ApiResponse<ConfirmationResponseDTO>> DeleteAccountAsync(int userId);
         Task<ApiResponse<ConfirmationResponseDTO>> ChangePasswordAsync(int userId, ChangePasswordDTO changePasswordDto);
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateCompanyProfileAsync(int userId, UpdateCompanyProfileDTO dto);

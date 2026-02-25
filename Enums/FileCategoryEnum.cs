@@ -2,7 +2,7 @@
 {
     public enum FileCategoryEnum
     {
-        Image = 1,
-        Resume
+        ProfilePIcture = 1,
+        Resume = 2
     }
 }
