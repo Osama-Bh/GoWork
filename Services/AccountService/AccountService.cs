@@ -648,6 +648,109 @@ namespace GoWork.Service.AccountService
                 Message = "There is a code have been sent to your email please check"
             });
         }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterAdmin(AdminRegistrationDTO adminRegistrationDTO)
+        {
+            var UserFound = await _userManager.FindByEmailAsync(adminRegistrationDTO.Email);
+
+            if (UserFound is not null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "البريد الإلكتروني مستخدم بالفعل");
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = adminRegistrationDTO.UserName,
+                Email = adminRegistrationDTO.Email,
+                PhoneNumber = adminRegistrationDTO.PhoneNumber,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user, adminRegistrationDTO.Password);
+
+            if (!result.Succeeded)
+                return new ApiResponse<ConfirmationResponseDTO>(400, "حدث مشكلة في إنشاء الحساب،حاول مرة أخرى");
+
+            await _userManager.AddToRoleAsync(user, "Admin");
+
+            await _context.SaveChangesAsync();
+
+
+            var content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {user.UserName},<br/>
+                      تم إنشاء حساب مدير (Admin) خاص بك بنجاح على منصة Masarak.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:2px;'>
+                        حساب مدير مفعل
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      يمكنك الآن تسجيل الدخول والبدء في إدارة النظام والصلاحيات والمستخدمين.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      يرجى الحفاظ على بيانات الدخول الخاصة بك بشكل آمن، حيث يمنحك هذا الحساب صلاحيات إدارية كاملة.
+                    </p>";
+
+            var htmlBody = BuildArabicTemplate("إنشاء حساب مدير - Masarak", content);
+
+
+            await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, user.UserName);
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "Admin Account Created Successfully"
+            });
+        }
+
+        //public async Task<ApiResponse<EmployerResponseDTO>> VerifyAdminEmail(EmailConfirmationDTO confirmationDTO)
+        //{
+        //    if (string.IsNullOrEmpty(confirmationDTO.Email) || string.IsNullOrEmpty(confirmationDTO.EmailConfirmationCode))
+        //        return new ApiResponse<EmployerResponseDTO>(400, "Email or Confimation Code is missing !");
+
+        //    var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
+
+        //    if (user is null)
+        //    {
+        //        return new ApiResponse<EmployerResponseDTO>(400, "User Not Found.");
+        //    }
+
+        //    var isVerfied = await _userManager.ConfirmEmailAsync(user, confirmationDTO.EmailConfirmationCode);
+
+        //    if (isVerfied.Succeeded)
+        //    {
+
+        //        await _userManager.AddToRoleAsync(user, "Admin");
+                
+
+        //        //var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
+        //        return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+        //        {
+        //            Email = user.Email,
+        //            //SasUrl = downLoadResult.SasUrl,
+        //            //ExpiresAt = downLoadResult.ExpiresAt,
+        //            Role = "Admin",
+        //            CompanyName = user.UserName,
+        //            PhoneNumber = user.PhoneNumber
+        //        });
+        //    }
+        //    else
+        //    {
+        //        return new ApiResponse<EmployerResponseDTO>(400, "Email verification failed. Please check the confirmation code and try again.");
+        //    }
+        //}
+
         public async Task<ApiResponse<CandidateResponseDTO2>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
             if (string.IsNullOrEmpty(confirmationDTO.Email) || string.IsNullOrEmpty(confirmationDTO.EmailConfirmationCode))
@@ -657,7 +760,7 @@ namespace GoWork.Service.AccountService
 
             if (user is null)
             {
-                return new ApiResponse<CandidateResponseDTO2>(400, "User Nou Found.");
+                return new ApiResponse<CandidateResponseDTO2>(400, "User Not Found.");
             }
 
             var isVerfied = await _userManager.ConfirmEmailAsync(user, confirmationDTO.EmailConfirmationCode);
@@ -858,11 +961,6 @@ namespace GoWork.Service.AccountService
 
                 await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, company.ComapnyName);
 
-                //await _emailService.SendEmailAsync(user.Email, "Verify Your Email", $"<p>Hello {company?.ComapnyName},</p> <p>Please use the code below to verify your email address:</p> <div style=\"font-size: 24px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; text-align: center;\"> {confirmationToken} </div> <p>This code is valid for a limited time.</p> <p style=\"font-size: 12px; color: #777;\"> If you didn’t create a GoWork account, you can safely ignore this email. </p> <p>— GoWork Team</p> </div>", company.ComapnyName);
-                //return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
-                //{
-                //    Message = "There is a code have been sent to your email please check"
-                //});
                 return new ApiResponse<EmployerResponseDTO>(401, "");
             }
 
@@ -889,7 +987,6 @@ namespace GoWork.Service.AccountService
                     Email = user.Email,
                     SasUrl = downLoadResult.SasUrl,
                     ExpiresAt = downLoadResult.ExpiresAt,
-                    //Role = "Company",
                     Role = role,
                     CompanyName = company.ComapnyName
                 });
@@ -902,6 +999,134 @@ namespace GoWork.Service.AccountService
                     EmployerId = user.Id, // or null if your DTO supports it
                     Email = user.Email,
                     Role = role
+                });
+            }
+
+        }
+
+        public async Task<ApiResponse<EmployerResponseDTO>> LoginAdminAndCompany(LoginDTO loginDTO)
+        {
+            var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+
+            if (user is null)
+                return new ApiResponse<EmployerResponseDTO>(400, "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+
+            if (!await _userManager.CheckPasswordAsync(user, loginDTO.Password))
+                return new ApiResponse<EmployerResponseDTO>(400, "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "Unknown";
+
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                if(role== "Admin")
+                {
+                    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {user.UserName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+
+                    var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
+                    await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, user.UserName);
+
+                    return new ApiResponse<EmployerResponseDTO>(401, "");
+                }
+                else
+                {
+                    var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+                    var content = $@"
+                    <p style='color:#555;'>
+                      مرحبًا {company.ComapnyName},<br/>
+                      من فضلك استخدم الرمز أدناه لتأكيد بريدك الإلكتروني.
+                    </p>
+
+                    <div style='text-align:center; margin:30px 0;'>
+                      <span style='display:inline-block; 
+                                   background-color:#2563eb; 
+                                   color:#ffffff; 
+                                   font-size:24px; 
+                                   font-weight:bold; 
+                                   padding:15px 25px; 
+                                   border-radius:6px; 
+                                   letter-spacing:4px;'>
+                        {confirmationToken}
+                      </span>
+                    </div>
+
+                    <p style='color:#888; font-size:14px;'>
+                      هذا الرمز صالح لفترة محدودة.
+                    </p>
+
+                    <p style='color:#888; font-size:14px;'>
+                      إذا لم تقم بإنشاء حساب في Masarak، يمكنك تجاهل هذه الرسالة بأمان.
+                    </p>";
+
+                    var htmlBody = BuildArabicTemplate("تأكيد البريد الإلكتروني", content);
+
+
+                    await _emailService.SendEmailAsync(user.Email, "Verify Your Email", htmlBody, company.ComapnyName);
+
+                    return new ApiResponse<EmployerResponseDTO>(401, "");
+                }
+            }
+
+
+            if (role == "Company")
+            {
+                var company = _context.TbEmployers.FirstOrDefault(c => c.UserId == user.Id);
+
+                if (company == null)
+                    return new ApiResponse<EmployerResponseDTO>(404, "Employer info not found for this user.");
+
+                var downLoadResult = _fileService.DownloadUrlAsync(company.LogoUrl);
+
+
+
+                return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+                {
+                    EmployerId = company.Id,
+                    Email = user.Email,
+                    SasUrl = downLoadResult.SasUrl,
+                    ExpiresAt = downLoadResult.ExpiresAt,
+                    Role = role,
+                    CompanyName = company.ComapnyName
+                });
+            }
+            else
+            {
+                // For other roles, return minimal info without company details
+                return new ApiResponse<EmployerResponseDTO>(200, new EmployerResponseDTO
+                {
+                    EmployerId = user.Id, // or null if your DTO supports it
+                    Email = user.Email,
+                    Role = role,
+                    PhoneNumber = user.PhoneNumber,
+                    CompanyName = "Masarak",
                 });
             }
 
@@ -1056,6 +1281,8 @@ namespace GoWork.Service.AccountService
             }
         }
 
+
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(IFormFile file, int userId)
         {
             try
@@ -1197,31 +1424,64 @@ namespace GoWork.Service.AccountService
                     Message = "User Not Found"
                 });
 
-            var employer = await _context.TbEmployers
-                .FirstOrDefaultAsync(e => e.UserId == userId);
-
-            if (employer != null)
-                _context.TbEmployers.Remove(employer);
-
-            var role = await _context.UserRoles
-                .FirstOrDefaultAsync(e => e.UserId == userId);
-
-            if (role != null)
-                _context.UserRoles.Remove(role);
-
-            await _context.SaveChangesAsync();
-
-            var result = await _userManager.DeleteAsync(user);
-
-            if (!result.Succeeded)
-                return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
-                {
-                    Message = "User Deletion Failed"
-                });
-
-            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "Unknown";
+            
+            if(role == "Company")
             {
-                Message = "User Deleted Successfully"
+                var employer = await _context.TbEmployers
+                .FirstOrDefaultAsync(e => e.UserId == userId);
+
+                if (employer != null)
+                    _context.TbEmployers.Remove(employer);
+
+                var UserRole = await _context.UserRoles
+                    .FirstOrDefaultAsync(e => e.UserId == userId);
+
+                if (role != null)
+                    _context.UserRoles.Remove(UserRole);
+
+                await _context.SaveChangesAsync();
+
+                var result = await _userManager.DeleteAsync(user);
+
+                if (!result.Succeeded)
+                    return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
+                    {
+                        Message = "User Deletion Failed"
+                    });
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "User Deleted Successfully"
+                });
+            }
+            else if (role == "Admin")
+            {
+                var UserRole = await _context.UserRoles
+                    .FirstOrDefaultAsync(e => e.UserId == userId);
+
+                if (role != null)
+                    _context.UserRoles.Remove(UserRole);
+
+                await _context.SaveChangesAsync();
+
+                var result = await _userManager.DeleteAsync(user);
+
+                if (!result.Succeeded)
+                    return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
+                    {
+                        Message = "User Deletion Failed"
+                    });
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "User Deleted Successfully"
+                });
+            }
+            return new ApiResponse<ConfirmationResponseDTO>(400, new ConfirmationResponseDTO
+            {
+                Message = "User Deletion Failed"
             });
         }
 
@@ -1331,6 +1591,46 @@ namespace GoWork.Service.AccountService
                 });
             }
         }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateAdminProfileAsync(int userId, UpdateAdminProfileDTO dto)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user is null)
+                    return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                    {
+                        Message = "User not found."
+                    });
+
+
+                // Update fields
+                if (user.PhoneNumber != dto.PhoneNumber)
+                {
+                    user.PhoneNumber = dto.PhoneNumber;
+                }
+                if (user.UserName != dto.UserName)
+                {
+                    user.UserName = dto.UserName;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+                {
+                    Message = "Account Updated Successfully"
+                });
+            }
+            catch (Exception)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(500, new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while updating the profile."
+                });
+            }
+        }
+
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> ResendOtpAsync(ResendOtpDTO resendDto)
         {

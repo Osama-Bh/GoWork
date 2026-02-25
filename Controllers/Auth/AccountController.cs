@@ -130,6 +130,7 @@ namespace GoWork.Controllers.Auth
             return Ok("User deleted successfully.");
         }
 
+        // This is for both company and admin because they have the same response and we will differentiate between them in the service layer
         [Authorize]
         [HttpDelete("DeleteAccount")]
         public async Task<IActionResult> DeleteAccount()
@@ -158,6 +159,7 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
+        //This is for both company and admin because they have the same response
         [Authorize]
         [HttpPatch("ChangePassword")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> ChangePassword(ChangePasswordDTO changePasswordDto)
@@ -207,6 +209,32 @@ namespace GoWork.Controllers.Auth
 
             return Ok(response);
         }
+
+        [Authorize]
+        [HttpPatch("Admin/UpdateProfile")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateAdminProfile(UpdateAdminProfileDTO updateAdminProfileDTO)
+        {
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claims == null || !int.TryParse(claims.Value, out int userId))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, new ConfirmationResponseDTO
+                {
+                    Message = "Unauthorized: Id not found."
+                });
+            }
+
+            var response = await _accountService.UpdateAdminProfileAsync(userId, updateAdminProfileDTO);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+
+            }
+
+            return Ok(response);
+        }
+
 
         [Authorize(Roles = "Admin")]
         [HttpGet("AdminTest")]
@@ -365,6 +393,54 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
+        [HttpPost("Admin/Register")]
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> AdminRegister([FromForm] AdminRegistrationDTO adminRegistrationDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid registration data.");
+            }
+            var response = await _accountService.RegisterAdmin(adminRegistrationDTO);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode((int)response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        //[HttpPost("Admin/VerifyEmail")]
+        //public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> VerifyAdmnEmail(EmailConfirmationDTO confirmationDTO)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest("Invalid Confirmation data.");
+        //    }
+
+        //    var response = await _accountService.VerifyAdminEmail(confirmationDTO);
+        //    if (response.StatusCode != 200)
+        //    {
+        //        return StatusCode((int)response.StatusCode, response);
+        //    }
+
+        //    // ✅ Generate JWT
+        //    var user = await _userManager.FindByEmailAsync(confirmationDTO.Email);
+        //    var token = _accountService.GenerateJwtToken(user);
+
+        //    // ✅ Inject cookie
+        //    Response.Cookies.Append("access_token", token, new CookieOptions
+        //    {
+        //        HttpOnly = true,
+        //        Secure = true,
+        //        SameSite = SameSiteMode.None,
+        //        Expires = DateTime.UtcNow.AddDays(7),
+        //        Path = "/",
+        //        Domain = ".masarak.app"
+        //    });
+
+        //    return Ok(response);
+        //}
+
+
         [HttpPost("Candidate/VerifyEmail")]
         public async Task<ActionResult<ApiResponse<CandidateResponseDTO2>>> VerifyEmail(EmailConfirmationDTO confirmationDTO)
         {
@@ -399,7 +475,7 @@ namespace GoWork.Controllers.Auth
 
 
         //Added
-
+        //This login for both company and admin because they have the same response and we will differentiate between them in the service layer
         [HttpPost("Login")]
         public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> LoginCompany(LoginDTO loginDTO)
         {
@@ -410,7 +486,7 @@ namespace GoWork.Controllers.Auth
             var clientType = Request.Headers["ClientType"].ToString();
             if (clientType == "web")
             {
-                var response = await _accountService.LoginCompany(loginDTO);
+                var response = await _accountService.LoginAdminAndCompany(loginDTO);
                 if (response.StatusCode != 200)
                 {
                     return StatusCode((int)response.StatusCode, response);
@@ -479,6 +555,7 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
+        
         // Added
         [Authorize]
         [HttpPost("Logout")]
