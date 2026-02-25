@@ -282,7 +282,7 @@ namespace GoWork.Controllers.Auth
                     {
                         Email = user.Email,
                         Role = role,
-                        CompanyName = "Masarak",
+                        Name = "Masarak",
                         PhoneNumber = user.PhoneNumber
                     });
                 }
@@ -300,7 +300,7 @@ namespace GoWork.Controllers.Auth
                 {
                     Email = user.Email,
                     Role = role,
-                    CompanyName = employer.ComapnyName,
+                    Name = employer.ComapnyName,
                     PhoneNumber = user.PhoneNumber,
                     SasUrl = logoUrlResponse.SasUrl,
                     ExpiresAt = logoUrlResponse.ExpiresAt,

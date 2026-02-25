@@ -988,7 +988,7 @@ namespace GoWork.Service.AccountService
                     SasUrl = downLoadResult.SasUrl,
                     ExpiresAt = downLoadResult.ExpiresAt,
                     Role = role,
-                    CompanyName = company.ComapnyName
+                    Name = company.ComapnyName
                 });
             }
             else
@@ -1114,7 +1114,7 @@ namespace GoWork.Service.AccountService
                     SasUrl = downLoadResult.SasUrl,
                     ExpiresAt = downLoadResult.ExpiresAt,
                     Role = role,
-                    CompanyName = company.ComapnyName
+                    Name = company.ComapnyName
                 });
             }
             else
@@ -1126,7 +1126,7 @@ namespace GoWork.Service.AccountService
                     Email = user.Email,
                     Role = role,
                     PhoneNumber = user.PhoneNumber,
-                    CompanyName = "Masarak",
+                    Name = "Masarak",
                 });
             }
 
@@ -1260,7 +1260,7 @@ namespace GoWork.Service.AccountService
                         EmployerId = company.Id,
                         Email = user.Email,
                         Role = "Company",
-                        CompanyName = company.ComapnyName
+                        Name = company.ComapnyName
                     });
                 }
 
@@ -1272,7 +1272,7 @@ namespace GoWork.Service.AccountService
                     SasUrl = downLoadResult.SasUrl,
                     ExpiresAt = downLoadResult.ExpiresAt,
                     Role = "Company",
-                    CompanyName = company.ComapnyName
+                    Name = company.ComapnyName
                 });
             }
             else
