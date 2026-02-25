@@ -260,7 +260,7 @@ namespace GoWork.Services.FileService
             if (stream.Length > maxBytes)
                 throw new Exception($"File exceeds {maxSizeMb}MB");
 
-            var allowedTypes = category == FileCategoryEnum.Image
+            var allowedTypes = category == FileCategoryEnum.ProfilePIcture
                 ? _config.GetSection("AzureBlob:AllowedImages").Get<string[]>()
                 : _config.GetSection("AzureBlob:AllowedResumes").Get<string[]>();
 
@@ -271,7 +271,7 @@ namespace GoWork.Services.FileService
         private string _BuildBlobPath(string fileName, FileCategoryEnum category)
         {
             var extension = Path.GetExtension(fileName);
-            var folder = category == FileCategoryEnum.Image ? "images" : "resumes";
+            var folder = category == FileCategoryEnum.ProfilePIcture ? "images" : "resumes";
 
             return $"{folder}/{Guid.NewGuid()}{extension}";
         }
@@ -280,9 +280,9 @@ namespace GoWork.Services.FileService
         {
             return contentType switch
             {
-                "image/jpeg" => FileCategoryEnum.Image,
-                "image/png" => FileCategoryEnum.Image,
-                "image/webp" => FileCategoryEnum.Image,
+                "image/jpeg" => FileCategoryEnum.ProfilePIcture,
+                "image/png" => FileCategoryEnum.ProfilePIcture,
+                "image/webp" => FileCategoryEnum.ProfilePIcture,
 
                 "application/pdf" => FileCategoryEnum.Resume,
 

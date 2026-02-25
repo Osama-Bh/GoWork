@@ -541,16 +541,40 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
-
         [Authorize]
-        [HttpPost("UploadResume")]
-        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UploadResume(UploadFileRequestDTO requestDTO)
+        [HttpPost("candidate/uploadfile")] // for candidate // upload and update 
+        public async Task<ActionResult<ConfirmationResponseDTO>> UploadFile(IFormFile file)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest("Invalid data.");
             }
-            var response = await _accountService.UploadResume(requestDTO);
+
+            var UserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (UserIdClaim == null || !int.TryParse(UserIdClaim.Value, out int userId))
+            {
+                return Unauthorized("Unauthorized: CandidateId not found.");
+            }
+
+            var reslut = await _accountService.UploadFile(file, userId);
+            if (reslut.StatusCode != 200)
+            {
+                return StatusCode(reslut.StatusCode, reslut);
+            }
+            return Ok(reslut);
+        }
+
+        [Authorize]
+        [HttpGet("candidate/me/profilepicture")]
+        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetProfileImage()
+        {
+            var UserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (UserIdClaim == null || !int.TryParse(UserIdClaim.Value, out int userId))
+            {
+                return Unauthorized("Unauthorized: CandidateId not found.");
+            }
+
+            var response = await _accountService.DownloadCandidateProfilePicOrResume(userId, Enums.FileCategoryEnum.ProfilePIcture);
             if (response.StatusCode != 200)
             {
                 return StatusCode((int)response.StatusCode, response);
@@ -559,60 +583,16 @@ namespace GoWork.Controllers.Auth
         }
 
         [Authorize]
-        [HttpPut("UpdateProfilePhoto")]
-        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdatePhoto(UpdateFileRequestDTO requestDTO)
+        [HttpGet("candidate/me/resume")]
+        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetResume()
         {
-            if (!ModelState.IsValid)
+            var UserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (UserIdClaim == null || !int.TryParse(UserIdClaim.Value, out int userId))
             {
-                return BadRequest("Invalid data.");
+                return Unauthorized("Unauthorized: CandidateId not found.");
             }
-            var response = await _accountService.UpdateFile(requestDTO, Enums.FileCategoryEnum.Image);
-            if (response.StatusCode != 200)
-            {
-                return StatusCode((int)response.StatusCode, response);
-            }
-            return Ok(response);
-        }
 
-        [Authorize]
-        [HttpGet("DownloadProfilePhoto/{UserId}")]
-        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetProfileImage(int UserId)
-        {
-            if (UserId <= 0)
-                return BadRequest("Invalid UserId.");
-
-            var response = await _accountService.DownloadFile(UserId, Enums.FileCategoryEnum.Image);
-            if (response.StatusCode != 200)
-            {
-                return StatusCode((int)response.StatusCode, response);
-            }
-            return Ok(response);
-        }
-
-        [Authorize]
-        [HttpPut("UpdateResume")]
-        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateResume(UpdateFileRequestDTO requestDTO)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest("Invalid data.");
-            }
-            var response = await _accountService.UpdateFile(requestDTO, Enums.FileCategoryEnum.Resume);
-            if (response.StatusCode != 200)
-            {
-                return StatusCode((int)response.StatusCode, response);
-            }
-            return Ok(response);
-        }
-
-        [Authorize]
-        [HttpGet("DownloadResume/{UserId}")]
-        public async Task<ActionResult<ApiResponse<FileDownloadDto>>> GetResume(int UserId)
-        {
-            if (UserId <= 0)
-                return BadRequest("Invalid UserId.");
-
-            var response = await _accountService.DownloadFile(UserId, Enums.FileCategoryEnum.Resume);
+            var response = await _accountService.DownloadCandidateProfilePicOrResume(userId, Enums.FileCategoryEnum.Resume);
             if (response.StatusCode != 200)
             {
                 return StatusCode((int)response.StatusCode, response);

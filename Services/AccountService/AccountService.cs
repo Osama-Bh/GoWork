@@ -338,7 +338,7 @@ namespace GoWork.Service.AccountService
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (candidate == null)
-                    throw new Exception("Candidate not found");
+                    return new ApiResponse<CandidateResponseDTO>(404, "Candidate not found");
 
                 // =========================
                 // Scalar fields (PATCH)
@@ -351,6 +351,15 @@ namespace GoWork.Service.AccountService
 
                 if (dto.LastName != null)
                     candidate.LastName = dto.LastName;
+
+                if (dto.PhoneNo is not null)
+                {
+                    var user = await _userManager.FindByIdAsync(userId.ToString());
+                    if (user is null)
+                        return new ApiResponse<CandidateResponseDTO>(404, "User not found");
+
+                    user.PhoneNumber = dto.PhoneNo;
+                }
 
                 // =========================
                 // Profile photo upload
@@ -455,6 +464,7 @@ namespace GoWork.Service.AccountService
                     MiddleName = candidate.MiddleName,
                     LastName = candidate.LastName,
                     ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
+                    PictureExpirationDate = lstFillsDTO[0] is null ? null : lstFillsDTO[0].ExpiresAt,
                     ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
                     Skills = candidate.SeekerSkills?
                     .Where(cs => cs.Skill != null)
@@ -474,6 +484,7 @@ namespace GoWork.Service.AccountService
             var candidate = await _context.TbSeekers
                 .Include(c => c.SeekerSkills)
                     .ThenInclude(cs => cs.Skill)
+                    .Include(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (candidate == null)
@@ -493,7 +504,9 @@ namespace GoWork.Service.AccountService
                 FirstName = candidate.FirsName,
                 MiddleName = string.IsNullOrEmpty(candidate.MiddleName) ? null : candidate.MiddleName,
                 LastName = candidate.LastName,
+                PhoneNo = candidate.ApplicationUser.PhoneNumber != null ? candidate.ApplicationUser.PhoneNumber : "",
                 ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
+                PictureExpirationDate = lstFillsDTO[0] is null ? null : lstFillsDTO[0].ExpiresAt,
                 ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
                 Skills = candidate.SeekerSkills?
                     .Where(cs => cs.Skill != null)
@@ -501,33 +514,6 @@ namespace GoWork.Service.AccountService
                     .ToList() ?? new List<string>()
             });
         }
-
-        //public async Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(UploadFileRequestDTO fileRequestDTO, FileCategoryEnum fileCategory)
-        //{
-        //    var uploadResult = await _fileService.UploadAsync(fileRequestDTO.File);
-        //    if (!uploadResult.Succeeded)
-        //    {
-        //        return new ApiResponse<ConfirmationResponseDTO>(400, "File upload failed.");
-        //    }
-
-        //    var candidate = await _context.TbSeekers.FirstOrDefaultAsync(c => c.Id == fileRequestDTO.UserId);
-        //    if (candidate == null)
-        //    {
-        //        return new ApiResponse<ConfirmationResponseDTO>(404, "Candidate not found.");
-        //    }
-
-        //    if (fileCategory == FileCategoryEnum.Image)
-        //        candidate.ProfilePhoto = uploadResult.BlobUri;
-        //    else if (fileCategory == FileCategoryEnum.Resume)
-        //        candidate.ResumeUrl = uploadResult.BlobUri;
-
-        //    await _context.SaveChangesAsync();
-
-        //    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
-        //    {
-        //        Message = "File uploaded successfully."
-        //    });
-        //}
 
         //public async Task<ApiResponse<ConfirmationResponseDTO>> RegisterCompany(EmpolyerRegistrationDTO registrationDTO)
         //{
@@ -1070,24 +1056,52 @@ namespace GoWork.Service.AccountService
             }
         }
 
-        public async Task<ApiResponse<ConfirmationResponseDTO>> UploadResume(UploadFileRequestDTO requestDTO)
+        public async Task<ApiResponse<ConfirmationResponseDTO>> UploadFile(IFormFile file, int userId)
         {
             try
             {
-                var candidate = await _context.TbSeekers.FirstOrDefaultAsync(c => c.Id == requestDTO.UserId);
+                var candidate = await _context.TbSeekers.FirstOrDefaultAsync(s => s.UserId == userId);
 
                 if (candidate is null)
                     return new ApiResponse<ConfirmationResponseDTO>(404, "Candidate not found.");
 
-
-                var uploadResult = await _fileService.UploadAsync(requestDTO.File);
-                if (uploadResult is null)
+                if (_GetFileCategory(file.ContentType) == FileCategoryEnum.Resume)
                 {
-                    return new ApiResponse<ConfirmationResponseDTO>(400, "File upload failed.");
+                    if (candidate.ResumeUrl is null)
+                    {
+                        var uploadResult = await _fileService.UploadAsync(file);
+                        if (uploadResult is null)
+                            return new ApiResponse<ConfirmationResponseDTO>(400, "Resume upload failed.");
+
+                        candidate.ResumeUrl = uploadResult.BlobUri;
+                    }
+                    else
+                    {
+                        var updateResult = await _fileService.UpdateAsync(file, candidate.ResumeUrl);
+                        if (!updateResult)
+                            return new ApiResponse<ConfirmationResponseDTO>(400, "Resume update failed.");
+                    }
+                }
+                else if (_GetFileCategory(file.ContentType) == FileCategoryEnum.ProfilePIcture)
+                {
+                    if (candidate.ProfilePhoto is null)
+                    {
+                        var uploadResult = await _fileService.UploadAsync(file);
+                        if (uploadResult is null)
+                            return new ApiResponse<ConfirmationResponseDTO>(400, "Photo upload failed.");
+
+                        candidate.ProfilePhoto = uploadResult.BlobUri;
+                    }
+                    else
+                    {
+                        var updateResult = await _fileService.UpdateAsync(file, candidate.ResumeUrl);
+                        if (!updateResult)
+                            return new ApiResponse<ConfirmationResponseDTO>(400, "Photo upload failed.");
+                    }
                 }
 
-                candidate.ResumeUrl = uploadResult.BlobUri;
                 await _context.SaveChangesAsync();
+
                 return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
                 {
                     Message = "File uploaded successfully."
@@ -1097,6 +1111,20 @@ namespace GoWork.Service.AccountService
             {
                 return new ApiResponse<ConfirmationResponseDTO>(500, "An error occurred while uploading the file.");
             }
+        }
+
+        private FileCategoryEnum _GetFileCategory(string contentType)
+        {
+            return contentType switch
+            {
+                "image/jpeg" => FileCategoryEnum.ProfilePIcture,
+                "image/png" => FileCategoryEnum.ProfilePIcture,
+                "image/webp" => FileCategoryEnum.ProfilePIcture,
+
+                "application/pdf" => FileCategoryEnum.Resume,
+
+                _ => throw new Exception($"Unsupported content type: {contentType}")
+            };
         }
         public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory)
         {
@@ -1110,7 +1138,7 @@ namespace GoWork.Service.AccountService
 
                 if (fileCategory == FileCategoryEnum.Resume)
                     isUpdated = await _fileService.UpdateAsync(requestDTO.File, candidate.ResumeUrl);
-                else if (fileCategory == FileCategoryEnum.Image)
+                else if (fileCategory == FileCategoryEnum.ProfilePIcture)
                     isUpdated = await _fileService.UpdateAsync(requestDTO.File, candidate.ProfilePhoto);
 
                 return isUpdated
@@ -1124,11 +1152,11 @@ namespace GoWork.Service.AccountService
             }
         }
 
-        public async Task<ApiResponse<FileDownloadDto>> DownloadFile(int userId, FileCategoryEnum fileCategory)
+        public async Task<ApiResponse<FileDownloadDto>> DownloadCandidateProfilePicOrResume(int userId, FileCategoryEnum fileCategory)
         {
             try
             {
-                var candidate = await _context.TbSeekers.FirstOrDefaultAsync(c => c.Id == userId);
+                var candidate = await _context.TbSeekers.FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (candidate is null)
                     return new ApiResponse<FileDownloadDto>(404, "Candidate not found.");
@@ -1141,7 +1169,7 @@ namespace GoWork.Service.AccountService
                         return new ApiResponse<FileDownloadDto>(404, "Resume not found.");
                     response = _fileService.DownloadUrlAsync(candidate.ResumeUrl);
                 }
-                else if (fileCategory == FileCategoryEnum.Image)
+                else if (fileCategory == FileCategoryEnum.ProfilePIcture)
                 {
                     if (string.IsNullOrEmpty(candidate.ProfilePhoto))
                         return new ApiResponse<FileDownloadDto>(404, "Profile photo not found.");
