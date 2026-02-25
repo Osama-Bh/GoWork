@@ -6,7 +6,7 @@ namespace GoWork.DTOs.AuthDTOs
     {
         [Required]
         [StringLength(100, MinimumLength = 2)]
-        public string CompanyName { get; set; }
+        public string Name { get; set; }
 
         [Required]
         [EmailAddress]
