@@ -1295,12 +1295,22 @@ namespace GoWork.Service.AccountService
                     employer.ComapnyName = dto.CompanyName;
                 }
 
-                if (dto.LogoUrl is not null)
+                if (dto.isLogoChanged)
                 {
-                    var uploadResult = await _fileService.UploadAsync(dto.LogoUrl);
-                    if (uploadResult is not null)
+                    if(dto.isLogoDeleted)
                     {
-                        employer.LogoUrl = uploadResult.BlobUri;
+                        employer.LogoUrl = null;
+                    }
+                    else
+                    {
+                        if (dto.LogoUrl is not null)
+                        {
+                            var uploadResult = await _fileService.UploadAsync(dto.LogoUrl);
+                            if (uploadResult is not null)
+                            {
+                                employer.LogoUrl = uploadResult.BlobUri;
+                            }
+                        }
                     }
                 }
 
