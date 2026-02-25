@@ -660,7 +660,7 @@ namespace GoWork.Service.AccountService
 
             var user = new ApplicationUser
             {
-                UserName = adminRegistrationDTO.UserName,
+                UserName = adminRegistrationDTO.Name,
                 Email = adminRegistrationDTO.Email,
                 PhoneNumber = adminRegistrationDTO.PhoneNumber,
                 EmailConfirmed = true
@@ -1550,9 +1550,9 @@ namespace GoWork.Service.AccountService
                 {
                     employer.Industry = dto.Industry;
                 }
-                if(employer.ComapnyName != dto.CompanyName)
+                if(employer.ComapnyName != dto.Name)
                 {
-                    employer.ComapnyName = dto.CompanyName;
+                    employer.ComapnyName = dto.Name;
                 }
 
                 if (dto.isLogoChanged)
@@ -1610,9 +1610,9 @@ namespace GoWork.Service.AccountService
                 {
                     user.PhoneNumber = dto.PhoneNumber;
                 }
-                if (user.UserName != dto.UserName)
+                if (user.UserName != dto.Name)
                 {
-                    user.UserName = dto.UserName;
+                    user.UserName = dto.Name;
                 }
 
                 await _context.SaveChangesAsync();
