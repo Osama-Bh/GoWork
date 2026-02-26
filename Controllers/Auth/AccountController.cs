@@ -498,7 +498,7 @@ namespace GoWork.Controllers.Auth
 
         [Authorize]
         [HttpPatch("Candidate/UpdateProfile")]
-        public async Task<ActionResult<ApiResponse<CandidateResponseDTO>>> UpdateCandidateProfile([FromForm]UpdateProfileDTO profileDTO)
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateCandidateProfile([FromForm]UpdateProfileDTO profileDTO)
         {
             if (!ModelState.IsValid)
             {

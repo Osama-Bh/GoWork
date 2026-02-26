@@ -145,7 +145,8 @@ namespace GoWork.Services.FileService
                 return new FileDownloadDto
                 {
                     SasUrl = sasUri.ToString(),
-                    ExpiresAt = sasBuilder.ExpiresOn
+                    ExpiresAt = sasBuilder.ExpiresOn,
+                    Succeeded = true,
                 };
             }
             catch (Azure.RequestFailedException)

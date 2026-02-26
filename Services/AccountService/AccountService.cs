@@ -328,7 +328,7 @@ namespace GoWork.Service.AccountService
 
         }
 
-        public async Task<ApiResponse<CandidateResponseDTO>> UpdateCandidateProfileAsync(int userId, UpdateProfileDTO dto)
+        public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateCandidateProfileAsync(int userId, UpdateProfileDTO dto)
         {
             try
             {
@@ -338,7 +338,7 @@ namespace GoWork.Service.AccountService
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (candidate == null)
-                    return new ApiResponse<CandidateResponseDTO>(404, "Candidate not found");
+                    return new ApiResponse<ConfirmationResponseDTO>(404, "Candidate not found");
 
                 // =========================
                 // Scalar fields (PATCH)
@@ -356,7 +356,7 @@ namespace GoWork.Service.AccountService
                 {
                     var user = await _userManager.FindByIdAsync(userId.ToString());
                     if (user is null)
-                        return new ApiResponse<CandidateResponseDTO>(404, "User not found");
+                        return new ApiResponse<ConfirmationResponseDTO>(404, "User not found");
 
                     user.PhoneNumber = dto.PhoneNo;
                 }
@@ -456,27 +456,21 @@ namespace GoWork.Service.AccountService
                     lstFillsDTO.Add(_fileService.DownloadUrlAsync(candidate.ResumeUrl));
 
                 // =========================
-                // Return updated profile
+                // Return message
                 // =========================
-                return new ApiResponse<CandidateResponseDTO>(200, new CandidateResponseDTO
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
                 {
-                    FirstName = candidate.FirsName,
-                    MiddleName = candidate.MiddleName,
-                    LastName = candidate.LastName,
-                    ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
-                    PictureExpirationDate = lstFillsDTO[0] is null ? null : lstFillsDTO[0].ExpiresAt,
-                    ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
-                    Skills = candidate.SeekerSkills?
-                    .Where(cs => cs.Skill != null)
-                    .Select(cs => cs.Skill!.Name)
-                    .ToList() ?? new List<string>()
+                    Message = "Account Updated Successfully"
                 });
             }
             catch (Exception)
             {
-                return new ApiResponse<CandidateResponseDTO>(500, "An error occurred while updating the profile.");
+                return new ApiResponse<ConfirmationResponseDTO>(500, new ConfirmationResponseDTO
+                {
+                    Message = "An error occurred while updating the profile."
+                });
             }
-            
+
         }
 
         public async Task<ApiResponse<CandidateResponseDTO>> GetCandidateProfileAsync(int userId)
@@ -508,6 +502,7 @@ namespace GoWork.Service.AccountService
                 ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
                 PictureExpirationDate = lstFillsDTO[0] is null ? null : lstFillsDTO[0].ExpiresAt,
                 ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,
+                ResumeExpirationDate = lstFillsDTO[1] is null ? null : lstFillsDTO[1].ExpiresAt,
                 Skills = candidate.SeekerSkills?
                     .Where(cs => cs.Skill != null)
                     .Select(cs => cs.Skill!.Name)
@@ -1094,7 +1089,7 @@ namespace GoWork.Service.AccountService
                     }
                     else
                     {
-                        var updateResult = await _fileService.UpdateAsync(file, candidate.ResumeUrl);
+                        var updateResult = await _fileService.UpdateAsync(file, candidate.ProfilePhoto);
                         if (!updateResult)
                             return new ApiResponse<ConfirmationResponseDTO>(400, "Photo upload failed.");
                     }

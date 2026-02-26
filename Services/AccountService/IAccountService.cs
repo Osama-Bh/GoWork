@@ -45,7 +45,7 @@ namespace GoWork.Service.AccountService
             ResetPasswordDTO resetpasswordDTO
         );
 
-        Task<ApiResponse<CandidateResponseDTO>> UpdateCandidateProfileAsync(int candidateId, UpdateProfileDTO dto);
+        Task<ApiResponse<ConfirmationResponseDTO>> UpdateCandidateProfileAsync(int candidateId, UpdateProfileDTO dto);
         Task<ApiResponse<CandidateResponseDTO>> GetCandidateProfileAsync(int userId);
 
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateFile(UpdateFileRequestDTO requestDTO, FileCategoryEnum fileCategory);
