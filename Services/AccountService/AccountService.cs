@@ -1451,7 +1451,7 @@ namespace GoWork.Service.AccountService
                     Message = "User Deleted Successfully"
                 });
             }
-            else if (role == "Admin")
+            else if (role == "Admin" || role == "SubAdmin")
             {
                 var UserRole = await _context.UserRoles
                     .FirstOrDefaultAsync(e => e.UserId == userId);
