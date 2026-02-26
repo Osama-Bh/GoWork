@@ -666,7 +666,7 @@ namespace GoWork.Service.AccountService
             if (!result.Succeeded)
                 return new ApiResponse<ConfirmationResponseDTO>(400, "حدث مشكلة في إنشاء الحساب،حاول مرة أخرى");
 
-            await _userManager.AddToRoleAsync(user, "Admin");
+            await _userManager.AddToRoleAsync(user, "SubAdmin");
 
             await _context.SaveChangesAsync();
 
