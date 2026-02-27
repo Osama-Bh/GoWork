@@ -25,6 +25,7 @@ namespace GoWork.Models
         public int EmployerStatusId { get; set; }
         [ForeignKey("EmployerStatusId")]
         public EmployerStatus EmployerStatus { get; set; } = null!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<Job>? Jobs { get; set; }
     }
 }
