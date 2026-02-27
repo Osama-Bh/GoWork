@@ -2,6 +2,7 @@
 using GoWork.Data;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.Enums;
+using GoWork.Services.FileService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +12,13 @@ namespace GoWork.Services.AdminService
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileService _fileService;
 
-        public AdminService(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public AdminService(ApplicationDbContext context, UserManager<ApplicationUser> userManager,IFileService fileService)
         {
             _context = context;
             _userManager = userManager;
+            _fileService = fileService;
         }
 
         public async Task<ApiResponse<CompanyStatisticsDTO>> GetCompanyStatisticsAsync()
@@ -80,7 +83,7 @@ namespace GoWork.Services.AdminService
                     PhoneNumber = e.ApplicationUser.PhoneNumber ?? string.Empty,
                     CreatedAt = e.CreatedAt,
                     Status = e.EmployerStatus.Name,
-                    LogoUrl = e.LogoUrl
+                    LogoUrl = _fileService.DownloadUrlAsync(e.LogoUrl).SasUrl
                 })
                 .ToListAsync();
 
@@ -109,6 +112,8 @@ namespace GoWork.Services.AdminService
             {
                 return new ApiResponse<CompanyDetailDTO>(404, "Company not found.");
             }
+            var logoUrlResponse = _fileService
+                    .DownloadUrlAsync(employer.LogoUrl);
 
             var detail = new CompanyDetailDTO
             {
@@ -119,7 +124,7 @@ namespace GoWork.Services.AdminService
                 PhoneNumber = employer.ApplicationUser.PhoneNumber ?? string.Empty,
                 CreatedAt = employer.CreatedAt,
                 Status = employer.EmployerStatus.Name,
-                LogoUrl = employer.LogoUrl,
+                LogoUrl = logoUrlResponse.SasUrl,
                 EmailConfirmed = employer.ApplicationUser.EmailConfirmed,
                 TotalJobs = employer.Jobs?.Count ?? 0,
                 City = employer.Address?.AddressLine1,

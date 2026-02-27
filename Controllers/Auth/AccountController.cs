@@ -315,7 +315,7 @@ namespace GoWork.Controllers.Auth
                     PhoneNumber = user.PhoneNumber,
                     SasUrl = logoUrlResponse.SasUrl,
                     ExpiresAt = logoUrlResponse.ExpiresAt,
-                    Industry = employer.Industry
+                    Industry = employer.Industry,
                 });
             }
             else
