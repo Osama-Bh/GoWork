@@ -655,7 +655,7 @@ namespace GoWork.Service.AccountService
 
             var user = new ApplicationUser
             {
-                UserName = adminRegistrationDTO.Name,
+                UserName = adminRegistrationDTO.Email,
                 Email = adminRegistrationDTO.Email,
                 PhoneNumber = adminRegistrationDTO.PhoneNumber,
                 EmailConfirmed = true
