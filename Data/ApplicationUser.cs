@@ -12,5 +12,7 @@ namespace GoWork.Data
         public Employer? Employer { get; set; }
         [JsonIgnore]
         public ICollection<Feedback>? Feedbacks { get; set; }
+
+        public string Name { get; set; }
     }
 }
