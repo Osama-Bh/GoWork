@@ -286,6 +286,16 @@ namespace GoWork.Controllers.Auth
                         PhoneNumber = user.PhoneNumber
                     });
                 }
+                else if(role == "SubAdmin")
+                {
+                    return Ok(new EmployerResponseDTO
+                    {
+                        Email = user.Email,
+                        Role = role,
+                        Name = "Masarak",
+                        PhoneNumber = user.PhoneNumber
+                    });
+                }
 
                 var employer = await _context.TbEmployers
                     .FirstOrDefaultAsync(e => e.UserId == user.Id);
@@ -393,8 +403,9 @@ namespace GoWork.Controllers.Auth
             return Ok(response);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("Admin/Register")]
-        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> AdminRegister([FromForm] AdminRegistrationDTO adminRegistrationDTO)
+        public async Task<ActionResult<ApiResponse<EmployerResponseDTO>>> AdminRegister(AdminRegistrationDTO adminRegistrationDTO)
         {
             if (!ModelState.IsValid)
             {
