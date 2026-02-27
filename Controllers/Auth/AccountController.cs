@@ -293,7 +293,7 @@ namespace GoWork.Controllers.Auth
                     {
                         Email = user.Email,
                         Role = role,
-                        Name = "Masarak",
+                        Name = user.Name,
                         PhoneNumber = user.PhoneNumber
                     });
                 }
