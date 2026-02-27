@@ -49,6 +49,7 @@ namespace GoWork.Controllers.Auth
             _fileService = fileService;
         }
 
+        //this endpoint to list all emails 
         [HttpGet("ListAllEmails")]
         public async Task<IActionResult> GetInfo()
         {
@@ -409,7 +410,7 @@ namespace GoWork.Controllers.Auth
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest("Invalid registration data.");
+                return BadRequest("Invalid registration data!.");
             }
             var response = await _accountService.RegisterAdmin(adminRegistrationDTO);
             if (response.StatusCode != 200)
