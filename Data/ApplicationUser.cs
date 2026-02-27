@@ -13,6 +13,6 @@ namespace GoWork.Data
         [JsonIgnore]
         public ICollection<Feedback>? Feedbacks { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }
