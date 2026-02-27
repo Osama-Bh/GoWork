@@ -84,7 +84,7 @@ namespace GoWork.Controllers.Auth
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            var response = await _accountService.ResendOtpAsync(dto);
+            var response = await _accountService.ResendLinkAsync(dto);
 
             if (response.StatusCode != 200)
             {

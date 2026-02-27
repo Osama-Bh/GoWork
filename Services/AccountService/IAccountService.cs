@@ -58,6 +58,7 @@ namespace GoWork.Service.AccountService
 
         Task<ApiResponse<ConfirmationResponseDTO>> ResendOtpAsync(ResendOtpDTO resendDto);
 
+        Task<ApiResponse<ConfirmationResponseDTO>> ResendLinkAsync(ResendOtpDTO resendDto);
         Task<ApiResponse<ConfirmationResponseDTO>> RegisterAdmin(AdminRegistrationDTO adminRegistrationDTO);
 
         //Task<ApiResponse<EmployerResponseDTO>> VerifyAdminEmail(EmailConfirmationDTO confirmationDTO);

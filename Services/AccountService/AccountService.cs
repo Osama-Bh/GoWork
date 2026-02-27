@@ -658,7 +658,8 @@ namespace GoWork.Service.AccountService
                 UserName = adminRegistrationDTO.Email,
                 Email = adminRegistrationDTO.Email,
                 PhoneNumber = adminRegistrationDTO.PhoneNumber,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                Name = adminRegistrationDTO.Name
             };
 
             var result = await _userManager.CreateAsync(user, adminRegistrationDTO.Password);
