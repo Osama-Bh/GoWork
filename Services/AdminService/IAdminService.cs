@@ -1,4 +1,5 @@
 ﻿using ECommerceApp.DTOs;
+using GoWork.DTOs.AuthDTOs;
 using GoWork.DTOs.DashboardDTOs;
 
 namespace GoWork.Services.AdminService
@@ -19,5 +20,21 @@ namespace GoWork.Services.AdminService
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateCompanyAsync(int id, AdminUpdateCompanyDTO dto);
 
         Task<ApiResponse<BulkActionResultDTO>> BulkActionAsync(BulkActionDTO dto);
+
+        // Sub-admin management
+        Task<ApiResponse<SubAdminStatisticsDTO>> GetSubAdminStatisticsAsync();
+
+        Task<ApiResponse<PaginatedResult<SubAdminListItemDTO>>> GetSubAdminsAsync(
+            int page, int pageSize, string? search, string? status);
+
+        Task<ApiResponse<SubAdminDetailDTO>> GetSubAdminByIdAsync(int id);
+
+        Task<ApiResponse<ConfirmationResponseDTO>> UpdateSubAdminStatusAsync(int id, UpdateSubAdminStatusDTO dto);
+
+        Task<ApiResponse<ConfirmationResponseDTO>> DeleteSubAdminAsync(int id);
+
+        Task<ApiResponse<ConfirmationResponseDTO>> UpdateSubAdminAsync(int id, UpdateSubAdminDTO dto);
+
+        Task<ApiResponse<ConfirmationResponseDTO>> CreateSubAdminAsync(AdminRegistrationDTO dto);
     }
 }
