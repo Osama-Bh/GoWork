@@ -294,7 +294,8 @@ namespace GoWork.Controllers.Auth
                         Email = user.Email,
                         Role = role,
                         Name = user.Name,
-                        PhoneNumber = user.PhoneNumber
+                        PhoneNumber = user.PhoneNumber,
+                        Status = user.Status
                     });
                 }
 

@@ -48,9 +48,15 @@ namespace GoWork.Services.AdminService
                 .AsQueryable();
 
             // Search by company name
+            //if (!string.IsNullOrWhiteSpace(search))
+            //{
+            //    query = query.Where(e => e.ComapnyName.Contains(search));
+            //}
+
             if (!string.IsNullOrWhiteSpace(search))
             {
-                query = query.Where(e => e.ComapnyName.Contains(search));
+                query = query.Where(e => e.ComapnyName.Contains(search)
+                                      || e.ApplicationUser.Email!.Contains(search));
             }
 
             // Filter by status
@@ -308,7 +314,8 @@ namespace GoWork.Services.AdminService
             {
                 TotalSubAdmins = subAdmins.Count,
                 ActiveSubAdmins = subAdmins.Count(u => u.Status == UserStatusEnum.Active.ToString()),
-                SuspendedSubAdmins = subAdmins.Count(u => u.Status == UserStatusEnum.Suspended.ToString())
+                SuspendedSubAdmins = subAdmins.Count(u => u.Status == UserStatusEnum.Suspended.ToString()),
+                BlockedSubAdmins = subAdmins.Count(u=> u.Status== UserStatusEnum.Blocked.ToString()),
             };
 
             return new ApiResponse<SubAdminStatisticsDTO>(200, stats);
@@ -323,7 +330,7 @@ namespace GoWork.Services.AdminService
             if (!string.IsNullOrWhiteSpace(search))
             {
                 subAdmins = subAdmins
-                    .Where(u => (u.UserName ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+                    .Where(u => (u.Name ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
                              || (u.Email ?? "").Contains(search, StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
@@ -343,7 +350,7 @@ namespace GoWork.Services.AdminService
                 .Select(u => new SubAdminListItemDTO
                 {
                     Id = u.Id,
-                    Name = u.UserName ?? string.Empty,
+                    Name = u.Name ?? string.Empty,
                     Email = u.Email ?? string.Empty,
                     PhoneNumber = u.PhoneNumber ?? string.Empty,
                     CreatedAt = u.CreatedAt,
