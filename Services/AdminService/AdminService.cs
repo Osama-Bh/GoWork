@@ -2,6 +2,7 @@
 using GoWork.Data;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.Enums;
+using GoWork.Services.EmailService;
 using GoWork.Services.FileService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +14,14 @@ namespace GoWork.Services.AdminService
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileService _fileService;
+        private readonly IEmailService _emailService;
 
-        public AdminService(ApplicationDbContext context, UserManager<ApplicationUser> userManager,IFileService fileService)
+        public AdminService(ApplicationDbContext context, UserManager<ApplicationUser> userManager,IFileService fileService, IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _fileService = fileService;
+            _emailService = emailService;
         }
 
         public async Task<ApiResponse<CompanyStatisticsDTO>> GetCompanyStatisticsAsync()
@@ -141,14 +144,39 @@ namespace GoWork.Services.AdminService
                 return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid status value.");
             }
 
-            var employer = await _context.TbEmployers.FindAsync(id);
+            //var employer = await _context.TbEmployers.FindAsync(id);
+
+            var employer = await _context.TbEmployers
+            .Include(e => e.ApplicationUser)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
             if (employer == null)
             {
                 return new ApiResponse<ConfirmationResponseDTO>(404, "Company not found.");
             }
 
+            // Prevent unnecessary update
+            if (employer.EmployerStatusId == (int)newStatus)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Status is already set to this value.");
+            }
+
             employer.EmployerStatusId = (int)newStatus;
             await _context.SaveChangesAsync();
+
+            // 🔔 Send Email Notification
+            var userEmail = employer.ApplicationUser.Email;
+            var companyName = employer.ComapnyName;
+
+            var subject = "Company Status Updated";
+
+            var body = $@"
+            <p>Dear {companyName},</p>
+            <p>Your company status has been updated.</p>
+            <p><strong>New Status:</strong> {newStatus}</p>
+        ";
+
+            await _emailService.SendEmailAsync(userEmail, subject, body, companyName);
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
@@ -164,13 +192,13 @@ namespace GoWork.Services.AdminService
                 return new ApiResponse<ConfirmationResponseDTO>(404, "Company not found.");
             }
 
-            // Soft delete: set status to Suspended
-            employer.EmployerStatusId = (int)EmployerStatusEnum.Suspended;
+            // Soft delete: set status to Blocked
+            employer.EmployerStatusId = (int)EmployerStatusEnum.Blocked;
             await _context.SaveChangesAsync();
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
             {
-                Message = "Company has been suspended successfully."
+                Message = "Company has been blocked successfully."
             });
         }
 
@@ -218,7 +246,9 @@ namespace GoWork.Services.AdminService
             {
                 "approve" => (int)EmployerStatusEnum.Active,
                 "reject" => (int)EmployerStatusEnum.Rejected,
-                "suspend" or "delete" => (int)EmployerStatusEnum.Suspended,
+                //"suspend" or "delete" => (int)EmployerStatusEnum.Suspended,
+                "suspend" => (int)EmployerStatusEnum.Suspended,
+                "delete" => (int)EmployerStatusEnum.Blocked,
                 _ => null
             };
 
