@@ -299,7 +299,9 @@ namespace GoWork.Controllers.Auth
                 }
 
                 var employer = await _context.TbEmployers
-                    .FirstOrDefaultAsync(e => e.UserId == user.Id);
+                .Include(e => e.EmployerStatus)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.UserId == user.Id);
 
                 if (employer == null)
                     return NotFound("Employer profile not found.");
@@ -316,6 +318,7 @@ namespace GoWork.Controllers.Auth
                     SasUrl = logoUrlResponse.SasUrl,
                     ExpiresAt = logoUrlResponse.ExpiresAt,
                     Industry = employer.Industry,
+                    Status = employer.EmployerStatus.Name
                 });
             }
             else

@@ -10,5 +10,6 @@
         public string Name { get; set; } = string.Empty;
         public string PhoneNumber {  get; set; } = string.Empty;
         public string Industry {  get; set; } = string.Empty;
+        public string Status {  get; set; } = string.Empty;
     }
 }

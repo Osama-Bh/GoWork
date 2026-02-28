@@ -25,6 +25,11 @@ namespace GoWork.Controllers.Dashboard
         public async Task<ActionResult<ApiResponse<CompanyStatisticsDTO>>> GetStatistics()
         {
             var response = await _adminService.GetCompanyStatisticsAsync();
+
+            if(response.StatusCode!=200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -44,6 +49,11 @@ namespace GoWork.Controllers.Dashboard
             if (pageSize < 1 || pageSize > 50) pageSize = 10;
 
             var response = await _adminService.GetCompaniesAsync(page, pageSize, search, status, sortBy, sortOrder);
+
+            if(response.StatusCode!=200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
