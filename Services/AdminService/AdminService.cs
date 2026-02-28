@@ -174,7 +174,7 @@ namespace GoWork.Services.AdminService
             <p>Dear {companyName},</p>
             <p>Your company status has been updated.</p>
             <p><strong>New Status:</strong> {newStatus}</p>
-        ";
+            ";
 
             await _emailService.SendEmailAsync(userEmail, subject, body, companyName);
 
