@@ -1,6 +1,7 @@
 
 using GoWork.Data;
 using GoWork.Service.AccountService;
+using GoWork.Services.AdminService;
 using GoWork.Services.EmailService;
 using GoWork.Services.FileService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -115,6 +116,7 @@ namespace GoWork
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
             #region Cors Settings
             builder.Services.AddCors(options =>
