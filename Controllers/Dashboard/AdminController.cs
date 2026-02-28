@@ -1,4 +1,5 @@
 ﻿using ECommerceApp.DTOs;
+using GoWork.DTOs.AuthDTOs;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.Services.AdminService;
 using Microsoft.AspNetCore.Authorization;
@@ -136,6 +137,127 @@ namespace GoWork.Controllers.Dashboard
 
             var response = await _adminService.BulkActionAsync(dto);
             if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        // ==================== Sub-Admin Management (Admin only) ====================
+
+        /// <summary>
+        /// Get sub-admin statistics for dashboard cards.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("sub-admins/statistics")]
+        public async Task<ActionResult<ApiResponse<SubAdminStatisticsDTO>>> GetSubAdminStatistics()
+        {
+            var response = await _adminService.GetSubAdminStatisticsAsync();
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get paginated list of sub-admins with search and filter.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("sub-admins")]
+        public async Task<ActionResult<ApiResponse<PaginatedResult<SubAdminListItemDTO>>>> GetSubAdmins(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 50) pageSize = 10;
+
+            var response = await _adminService.GetSubAdminsAsync(page, pageSize, search, status);
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get detailed information for a single sub-admin.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("sub-admins/{id}")]
+        public async Task<ActionResult<ApiResponse<SubAdminDetailDTO>>> GetSubAdminById(int id)
+        {
+            var response = await _adminService.GetSubAdminByIdAsync(id);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Update sub-admin status (Activate / Suspend).
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("sub-admins/{id}/status")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateSubAdminStatus(int id, UpdateSubAdminStatusDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            var response = await _adminService.UpdateSubAdminStatusAsync(id, dto);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Soft delete a sub-admin (sets status to Blocked).
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("sub-admins/{id}")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> DeleteSubAdmin(int id)
+        {
+            var response = await _adminService.DeleteSubAdminAsync(id);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Update sub-admin details (name, email, phone).
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPut("sub-admins/{id}")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> UpdateSubAdmin(int id, UpdateSubAdminDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid request data.");
+            }
+
+            var response = await _adminService.UpdateSubAdminAsync(id, dto);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Create a new sub-admin.
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpPost("sub-admins")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> CreateSubAdmin(AdminRegistrationDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Invalid registration data.");
+            }
+
+            var response = await _adminService.CreateSubAdminAsync(dto);
+            if (response.StatusCode != 200 && response.StatusCode != 201)
             {
                 return StatusCode(response.StatusCode, response);
             }

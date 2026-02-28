@@ -291,5 +291,218 @@ namespace GoWork.Services.AdminService
 
             return new ApiResponse<BulkActionResultDTO>(200, result);
         }
+
+        // ==================== Sub-Admin Management ====================
+
+        private async Task<List<ApplicationUser>> GetSubAdminUsersQueryAsync()
+        {
+            var subAdminUsers = await _userManager.GetUsersInRoleAsync("SubAdmin");
+            return subAdminUsers.ToList();
+        }
+
+        public async Task<ApiResponse<SubAdminStatisticsDTO>> GetSubAdminStatisticsAsync()
+        {
+            var subAdmins = await GetSubAdminUsersQueryAsync();
+
+            var stats = new SubAdminStatisticsDTO
+            {
+                TotalSubAdmins = subAdmins.Count,
+                ActiveSubAdmins = subAdmins.Count(u => u.Status == UserStatusEnum.Active.ToString()),
+                SuspendedSubAdmins = subAdmins.Count(u => u.Status == UserStatusEnum.Suspended.ToString())
+            };
+
+            return new ApiResponse<SubAdminStatisticsDTO>(200, stats);
+        }
+
+        public async Task<ApiResponse<PaginatedResult<SubAdminListItemDTO>>> GetSubAdminsAsync(
+            int page, int pageSize, string? search, string? status)
+        {
+            var subAdmins = await GetSubAdminUsersQueryAsync();
+
+            // Search by name or email
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                subAdmins = subAdmins
+                    .Where(u => (u.UserName ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+                             || (u.Email ?? "").Contains(search, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            // Filter by status
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                subAdmins = subAdmins.Where(u => u.Status.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            var totalCount = subAdmins.Count;
+
+            var items = subAdmins
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new SubAdminListItemDTO
+                {
+                    Id = u.Id,
+                    Name = u.UserName ?? string.Empty,
+                    Email = u.Email ?? string.Empty,
+                    PhoneNumber = u.PhoneNumber ?? string.Empty,
+                    CreatedAt = u.CreatedAt,
+                    Status = u.Status
+                })
+                .ToList();
+
+            var result = new PaginatedResult<SubAdminListItemDTO>
+            {
+                Items = items,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
+            return new ApiResponse<PaginatedResult<SubAdminListItemDTO>>(200, result);
+        }
+
+        public async Task<ApiResponse<SubAdminDetailDTO>> GetSubAdminByIdAsync(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return new ApiResponse<SubAdminDetailDTO>(404, "Sub-admin not found.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains("SubAdmin"))
+            {
+                return new ApiResponse<SubAdminDetailDTO>(404, "Sub-admin not found.");
+            }
+
+            var detail = new SubAdminDetailDTO
+            {
+                Id = user.Id,
+                Name = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                CreatedAt = user.CreatedAt,
+                Status = user.Status
+            };
+
+            return new ApiResponse<SubAdminDetailDTO>(200, detail);
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateSubAdminStatusAsync(int id, UpdateSubAdminStatusDTO dto)
+        {
+            if (!Enum.TryParse<UserStatusEnum>(dto.Status, true, out var newStatus))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Invalid status value. Allowed: Active, Suspended, Blocked.");
+            }
+
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains("SubAdmin"))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            user.Status = newStatus.ToString();
+            await _userManager.UpdateAsync(user);
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "Sub-admin status updated successfully."
+            });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> DeleteSubAdminAsync(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains("SubAdmin"))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            // Soft delete: set status to Blocked
+            user.Status = UserStatusEnum.Blocked.ToString();
+            await _userManager.UpdateAsync(user);
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "Sub-admin has been blocked successfully."
+            });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateSubAdminAsync(int id, UpdateSubAdminDTO dto)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains("SubAdmin"))
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Sub-admin not found.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Name))
+                user.UserName = dto.Name;
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+                user.Email = dto.Email;
+
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                user.PhoneNumber = dto.PhoneNumber;
+
+            await _userManager.UpdateAsync(user);
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO
+            {
+                Message = "Sub-admin updated successfully."
+            });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> CreateSubAdminAsync(GoWork.DTOs.AuthDTOs.AdminRegistrationDTO dto)
+        {
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "البريد الإلكتروني مستخدم بالفعل");
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = dto.Name,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                EmailConfirmed = true,
+                Status = UserStatusEnum.Active.ToString(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, dto.Password);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return new ApiResponse<ConfirmationResponseDTO>(400, errors);
+            }
+
+            await _userManager.AddToRoleAsync(user, "SubAdmin");
+
+            return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
+            {
+                Message = "Sub-admin created successfully."
+            });
+        }
     }
 }
