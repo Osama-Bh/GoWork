@@ -8,6 +8,14 @@
 
   <ItemGroup>
     <Compile Remove="Controllers\Mobile\FilesController.cs" />
+    <Compile Remove="Migrations\20260302231239_SeedCountries.cs" />
+    <Compile Remove="Migrations\20260302231239_SeedCountries.Designer.cs" />
+    <Compile Remove="Migrations\20260302231345_SeedGovernates.cs" />
+    <Compile Remove="Migrations\20260302231345_SeedGovernates.Designer.cs" />
+    <Compile Remove="Migrations\20260302231436_SeedCurrencies.cs" />
+    <Compile Remove="Migrations\20260302231436_SeedCurrencies.Designer.cs" />
+    <Compile Remove="Migrations\20260302231516_SeedSkills.cs" />
+    <Compile Remove="Migrations\20260302231516_SeedSkills.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

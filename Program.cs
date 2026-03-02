@@ -117,6 +117,8 @@ namespace GoWork
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<GoWork.Services.JobService.IJobService, GoWork.Services.JobService.JobService>();
+
 
             #region Cors Settings
             builder.Services.AddCors(options =>
