@@ -59,6 +59,12 @@ namespace GoWork.Controllers.JobController
             if (pageSize < 1 || pageSize > 50) pageSize = 10;
 
             var response = await _jobService.GetJobsAsync(employerId.Value, page, pageSize, search, status, jobTypeId);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+
             return Ok(response);
         }
 
@@ -74,7 +80,9 @@ namespace GoWork.Controllers.JobController
 
             var response = await _jobService.GetJobByIdAsync(employerId.Value, id);
             if (response.StatusCode != 200)
+            {
                 return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -141,9 +149,13 @@ namespace GoWork.Controllers.JobController
         /// Get all job categories.
         /// </summary>
         [HttpGet("categories")]
-        public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetCategories()
+        public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetCategories([FromQuery] string? search = null)
         {
-            var response = await _jobService.GetCategoriesAsync();
+            var response = await _jobService.GetCategoriesAsync(search);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -154,6 +166,10 @@ namespace GoWork.Controllers.JobController
         public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetJobTypes()
         {
             var response = await _jobService.GetJobTypesAsync();
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -164,6 +180,10 @@ namespace GoWork.Controllers.JobController
         public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetLocationTypes()
         {
             var response = await _jobService.GetLocationTypesAsync();
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -171,19 +191,27 @@ namespace GoWork.Controllers.JobController
         /// Get all currencies.
         /// </summary>
         [HttpGet("currencies")]
-        public async Task<ActionResult<ApiResponse<List<CurrencyLookupDTO>>>> GetCurrencies()
+        public async Task<ActionResult<ApiResponse<List<CurrencyLookupDTO>>>> GetCurrencies([FromQuery] string? search = null)
         {
-            var response = await _jobService.GetCurrenciesAsync();
+            var response = await _jobService.GetCurrenciesAsync(search);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
         /// <summary>
-        /// Get all countries (searchable).
+        /// Get all countries.
         /// </summary>
         [HttpGet("countries")]
-        public async Task<ActionResult<ApiResponse<List<CountryLookupDTO>>>> GetCountries()
+        public async Task<ActionResult<ApiResponse<List<CountryLookupDTO>>>> GetCountries([FromQuery] string? search = null)
         {
-            var response = await _jobService.GetCountriesAsync();
+            var response = await _jobService.GetCountriesAsync(search);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -191,9 +219,13 @@ namespace GoWork.Controllers.JobController
         /// Get governates/regions for a specific country.
         /// </summary>
         [HttpGet("governates/{countryId}")]
-        public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetGovernates(int countryId)
+        public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetGovernates(int countryId, [FromQuery] string? search = null)
         {
-            var response = await _jobService.GetGovernatesAsync(countryId);
+            var response = await _jobService.GetGovernatesAsync(countryId, search);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
@@ -204,6 +236,10 @@ namespace GoWork.Controllers.JobController
         public async Task<ActionResult<ApiResponse<List<SkillDTO>>>> GetSkills([FromQuery] string? search = null)
         {
             var response = await _jobService.GetSkillsAsync(search);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
     }

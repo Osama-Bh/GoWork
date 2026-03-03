@@ -290,9 +290,17 @@ namespace GoWork.Services.JobService
 
         // ==================== Lookups ====================
 
-        public async Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync()
+        public async Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync(string? search)
         {
-            var items = await _context.TbCategories
+            var query = _context.TbCategories.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Name.Contains(search));
+            }
+
+            var items = await query
+                .OrderBy(c => c.Name)
                 .Select(c => new LookupDTO { Id = c.Id, Name = c.Name })
                 .ToListAsync();
             return new ApiResponse<List<LookupDTO>>(200, items);
@@ -316,28 +324,49 @@ namespace GoWork.Services.JobService
             return new ApiResponse<List<LookupDTO>>(200, items);
         }
 
-        public async Task<ApiResponse<List<CurrencyLookupDTO>>> GetCurrenciesAsync()
+        public async Task<ApiResponse<List<CurrencyLookupDTO>>> GetCurrenciesAsync(string? search)
         {
-            var items = await _context.TbCurrencies
-                .Where(c => c.IsActive)
+            var query = _context.TbCurrencies.Where(c => c.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Name.Contains(search) || c.Code.Contains(search));
+            }
+
+            var items = await query
+                .OrderBy(c => c.Name)
                 .Select(c => new CurrencyLookupDTO { Id = c.Id, Code = c.Code, Name = c.Name })
                 .ToListAsync();
             return new ApiResponse<List<CurrencyLookupDTO>>(200, items);
         }
 
-        public async Task<ApiResponse<List<CountryLookupDTO>>> GetCountriesAsync()
+        public async Task<ApiResponse<List<CountryLookupDTO>>> GetCountriesAsync(string? search)
         {
-            var items = await _context.TbCountries
-                .Where(c => c.IsActive)
+            var query = _context.TbCountries.Where(c => c.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Name.Contains(search) || c.Code.Contains(search));
+            }
+
+            var items = await query
+                .OrderBy(c => c.Name)
                 .Select(c => new CountryLookupDTO { Id = c.Id, Name = c.Name, Code = c.Code })
                 .ToListAsync();
             return new ApiResponse<List<CountryLookupDTO>>(200, items);
         }
 
-        public async Task<ApiResponse<List<LookupDTO>>> GetGovernatesAsync(int countryId)
+        public async Task<ApiResponse<List<LookupDTO>>> GetGovernatesAsync(int countryId, string? search)
         {
-            var items = await _context.TbGovernates
-                .Where(g => g.CountryId == countryId)
+            var query = _context.TbGovernates.Where(g => g.CountryId == countryId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(g => g.Name.Contains(search));
+            }
+
+            var items = await query
+                .OrderBy(g => g.Name)
                 .Select(g => new LookupDTO { Id = g.Id, Name = g.Name })
                 .ToListAsync();
             return new ApiResponse<List<LookupDTO>>(200, items);
