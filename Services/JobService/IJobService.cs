@@ -19,12 +19,12 @@ namespace GoWork.Services.JobService
         Task<ApiResponse<ConfirmationResponseDTO>> UpdateJobStatusAsync(int employerId, int id, UpdateJobStatusDTO dto);
 
         // Lookups
-        Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync();
+        Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync(string? search);
         Task<ApiResponse<List<LookupDTO>>> GetJobTypesAsync();
         Task<ApiResponse<List<LookupDTO>>> GetLocationTypesAsync();
-        Task<ApiResponse<List<CurrencyLookupDTO>>> GetCurrenciesAsync();
-        Task<ApiResponse<List<CountryLookupDTO>>> GetCountriesAsync();
-        Task<ApiResponse<List<LookupDTO>>> GetGovernatesAsync(int countryId);
+        Task<ApiResponse<List<CurrencyLookupDTO>>> GetCurrenciesAsync(string? search);
+        Task<ApiResponse<List<CountryLookupDTO>>> GetCountriesAsync(string? search);
+        Task<ApiResponse<List<LookupDTO>>> GetGovernatesAsync(int countryId, string? search);
         Task<ApiResponse<List<SkillDTO>>> GetSkillsAsync(string? search);
     }
 
