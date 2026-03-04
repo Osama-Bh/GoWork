@@ -22,6 +22,8 @@ namespace GoWork.Services.JobService
         public async Task<ApiResponse<PaginatedResult<JobListItemDTO>>> GetJobsAsync(
             int employerId, int page, int pageSize, string? search, string? status, int? jobTypeId)
         {
+            await CheckAndExpireJobsAsync(employerId);
+
             var query = _context.TbJobs
                 .Where(j => j.EmployerId == employerId)
                 .Include(j => j.JobType)
@@ -69,9 +71,7 @@ namespace GoWork.Services.JobService
                     PostedDate = j.PostedDate,
                     ExpirationDate = j.ExpirationDate,
                     ApplicantsCount = j.Applications != null ? j.Applications.Count : 0,
-                    Status = j.ExpirationDate < DateTime.UtcNow && j.JobStatusId == (int)JobStatusEnum.Published
-                        ? "Expired"
-                        : j.JobStatus.Name
+                    Status = j.JobStatus.Name
                 })
                 .ToListAsync();
 
@@ -88,6 +88,8 @@ namespace GoWork.Services.JobService
 
         public async Task<ApiResponse<JobDetailDTO>> GetJobByIdAsync(int employerId, int id)
         {
+            await CheckAndExpireJobsAsync(employerId);
+
             var job = await _context.TbJobs
                 .Where(j => j.Id == id && j.EmployerId == employerId)
                 .Include(j => j.JobType)
@@ -122,9 +124,7 @@ namespace GoWork.Services.JobService
                 PostedDate = job.PostedDate,
                 ExpirationDate = job.ExpirationDate,
                 ApplicantsCount = job.Applications?.Count ?? 0,
-                Status = job.ExpirationDate < DateTime.UtcNow && job.JobStatusId == (int)JobStatusEnum.Published
-                    ? "Expired"
-                    : job.JobStatus.Name,
+                Status = job.JobStatus.Name,
                 AddressLine = job.Address.AddressLine1,
                 CountryId = job.Address.CountryId,
                 Country = job.Address.Country.Name,
@@ -205,7 +205,16 @@ namespace GoWork.Services.JobService
             if (dto.CurrencyId.HasValue) job.CurrencyId = dto.CurrencyId.Value;
             if (dto.MinSalary.HasValue) job.MinSalary = dto.MinSalary.Value;
             if (dto.MaxSalary.HasValue) job.MaxSalary = dto.MaxSalary.Value;
-            if (dto.ExpirationDate.HasValue) job.ExpirationDate = dto.ExpirationDate.Value;
+            if (dto.ExpirationDate.HasValue)
+            {
+                job.ExpirationDate = dto.ExpirationDate.Value;
+
+                // Auto-republish if the job was previously expired and the new date is in the future
+                if (job.JobStatusId == (int)JobStatusEnum.Expired && job.ExpirationDate >= DateTime.UtcNow)
+                {
+                    job.JobStatusId = (int)JobStatusEnum.Published;
+                }
+            }
 
             // Update address if location fields provided
             if (dto.CountryId.HasValue || dto.GovernateId.HasValue || dto.AddressLine != null)
@@ -245,6 +254,11 @@ namespace GoWork.Services.JobService
             var job = await _context.TbJobs.FirstOrDefaultAsync(j => j.Id == id && j.EmployerId == employerId);
             if (job == null)
                 return new ApiResponse<ConfirmationResponseDTO>(404, "Job not found.");
+
+            if (newStatus == JobStatusEnum.Published && job.ExpirationDate < DateTime.UtcNow)
+            {
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Cannot publish a job with an expiration date in the past. Please update the expiration date first.");
+            }
 
             job.JobStatusId = (int)newStatus;
             await _context.SaveChangesAsync();
@@ -425,6 +439,24 @@ namespace GoWork.Services.JobService
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        private async Task CheckAndExpireJobsAsync(int employerId)
+        {
+            var expiredJobs = await _context.TbJobs
+                .Where(j => j.EmployerId == employerId &&
+                            j.JobStatusId == (int)JobStatusEnum.Published &&
+                            j.ExpirationDate < DateTime.UtcNow)
+                .ToListAsync();
+
+            if (expiredJobs.Any())
+            {
+                foreach (var job in expiredJobs)
+                {
+                    job.JobStatusId = (int)JobStatusEnum.Expired;
+                }
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }
