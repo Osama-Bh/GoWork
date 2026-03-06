@@ -22,6 +22,8 @@ namespace GoWork.Services.JobService
 
         Task<ApiResponse<List<JobRecommendationResponseDTO>>> GetJobRecommendationsAsync(int seekerId);
 
+        Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request);
+
         // Lookups
         Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync(string? search);
         Task<ApiResponse<List<LookupDTO>>> GetJobTypesAsync();

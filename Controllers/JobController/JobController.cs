@@ -175,6 +175,24 @@ namespace GoWork.Controllers.JobController
             return Ok(response);
         }
 
+        /// <summary>
+        /// Search and filter jobs using pagination.
+        /// Empty queries default to the Candidate's interest category if logged in.
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<ActionResult<ApiResponse<JobSearchResponseDto>>> SearchJobs([FromQuery] JobSearchRequestDto request)
+        {
+            // Attach seeker ID if the user is authenticated as Candidate
+            request.SeekerId = await GetSeekerIdAsync();
+
+            var response = await _jobService.SearchJobsAsync(request);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
         // ==================== Lookup Endpoints (for combo boxes) ====================
 
         /// <summary>
