@@ -446,6 +446,100 @@ namespace GoWork.Services.JobService
             }
         }
 
+        // ==================== Job Search ====================
+
+        public async Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request)
+        {
+            var query = _context.TbJobs.AsNoTracking().Where(j => j.JobStatusId == (int)JobStatusEnum.Published);
+
+            bool noFilters = string.IsNullOrWhiteSpace(request.Search) &&
+                             request.CategoryId == null &&
+                             request.JobTypeId == null &&
+                             request.JobLocationTypeId == null &&
+                             request.CountryId == null;
+
+            if (noFilters && request.SeekerId.HasValue)
+            {
+                var seeker = await _context.TbSeekers.FirstOrDefaultAsync(s => s.Id == request.SeekerId.Value);
+                if (seeker != null)
+                {
+                    query = query.Where(j => j.CategoryId == seeker.InterestCategoryId);
+                }
+            }
+            
+            // Apply text search
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var searchLower = request.Search.ToLower();
+                query = query.Where(j => j.Title.ToLower().Contains(searchLower) || j.Description.ToLower().Contains(searchLower));
+            }
+
+            // Apply strict filters
+            if (request.CategoryId.HasValue)
+                query = query.Where(j => j.CategoryId == request.CategoryId.Value);
+
+            if (request.JobTypeId.HasValue)
+                query = query.Where(j => j.JobTypeId == request.JobTypeId.Value);
+
+            if (request.JobLocationTypeId.HasValue)
+                query = query.Where(j => j.JobLocationTypeId == request.JobLocationTypeId.Value);
+
+            if (request.CountryId.HasValue)
+                query = query.Where(j => j.Address != null && j.Address.CountryId == request.CountryId.Value);
+
+            // Apply sorting
+            bool isDesc = string.Equals(request.SortOrder, "asc", StringComparison.OrdinalIgnoreCase) ? false : true;
+            var sortBy = request.SortBy?.ToLower() ?? "date";
+
+            switch (sortBy)
+            {
+                case "salary":
+                    query = isDesc ? query.OrderByDescending(j => j.MaxSalary) : query.OrderBy(j => j.MaxSalary);
+                    break;
+                case "title":
+                    query = isDesc ? query.OrderByDescending(j => j.Title) : query.OrderBy(j => j.Title);
+                    break;
+                case "date":
+                default:
+                    query = isDesc ? query.OrderByDescending(j => j.PostedDate) : query.OrderBy(j => j.PostedDate);
+                    break;
+            }
+
+            // Apply Pagination
+            if (request.Page < 1) request.Page = 1;
+            if (request.PageSize < 1 || request.PageSize > 50) request.PageSize = 30;
+
+            int totalCount = await query.CountAsync();
+            
+            var pagedJobs = await query
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(j => new JobCardDto
+                {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Description = j.Description,
+                    CompanyName = j.Employer.ComapnyName,
+                    Category = j.Category.Name,
+                    JobType = j.JobType.Name,
+                    LocationType = j.JobLocationType.Name,
+                    Country = j.Address != null && j.Address.Country != null ? j.Address.Country.Name : null,
+                    MinSalary = j.MinSalary,
+                    MaxSalary = j.MaxSalary,
+                    PostedDate = j.PostedDate
+                })
+                .ToListAsync();
+
+            return new ApiResponse<JobSearchResponseDto>(200, new JobSearchResponseDto
+            {
+                Jobs = pagedJobs,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalCount = totalCount,
+                HasNextPage = (request.Page * request.PageSize) < totalCount
+            });
+        }
+
         // ==================== Lookups ====================
 
         public async Task<ApiResponse<List<LookupDTO>>> GetCategoriesAsync(string? search)
