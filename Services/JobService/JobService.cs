@@ -5,16 +5,21 @@ using GoWork.DTOs.JobDTOs;
 using GoWork.Enums;
 using GoWork.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using OpenAI.Chat;
+using System.Text.Json;
 
 namespace GoWork.Services.JobService
 {
     public class JobService : IJobService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public JobService(ApplicationDbContext context)
+        public JobService(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         // ==================== Job CRUD ====================
@@ -300,6 +305,145 @@ namespace GoWork.Services.JobService
             {
                 Message = "Job deleted successfully."
             });
+        }
+
+        // ==================== AI Recommendations ====================
+
+        public async Task<ApiResponse<List<JobRecommendationResponseDTO>>> GetJobRecommendationsAsync(int seekerId)
+        {
+            // 1. Fetch seeker and validate
+            var seeker = await _context.TbSeekers
+                .Include(s => s.InterestCategory)
+                .Include(s => s.SeekerSkills).ThenInclude(ss => ss.Skill)
+                .FirstOrDefaultAsync(s => s.Id == seekerId);
+
+            if (seeker == null)
+            {
+                return new ApiResponse<List<JobRecommendationResponseDTO>>(404, "Seeker not found.");
+            }
+
+            // 2. Fetch pre-filtered jobs via SP
+            var preFilteredJobs = await _context.Database.SqlQueryRaw<PreFilteredJobDTO>(
+                "EXEC sp_GetPreFilteredJobs_ForAI @p0", seekerId)
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (!preFilteredJobs.Any())
+            {
+                return new ApiResponse<List<JobRecommendationResponseDTO>>(200, new List<JobRecommendationResponseDTO>());
+            }
+
+            // Default fallback response if AI fails
+            var fallbackResponse = preFilteredJobs.Select(j => new JobRecommendationResponseDTO
+            {
+                Id = j.Id,
+                Title = j.Title,
+                Description = j.Description,
+                MinSalary = j.MinSalary,
+                MaxSalary = j.MaxSalary,
+                CategoryName = j.CategoryName,
+                RequiredSkills = string.IsNullOrWhiteSpace(j.RequiredSkills) ? new() : j.RequiredSkills.Split(',').Select(s => s.Trim()).ToList(),
+                Score = null
+            }).OrderByDescending(j => j.Id).ToList(); // Sort by ID or Date as fallback
+
+            // 3. Setup AI
+            var apiKey = _configuration["OpenAI:ApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                // Fallback gracefully if no key is provided
+                return new ApiResponse<List<JobRecommendationResponseDTO>>(200, fallbackResponse);
+            }
+
+            try
+            {
+                // 4. Construct JSON objects for prompt
+                var candidateProfile = new
+                {
+                    skills = seeker.SeekerSkills?.Select(ss => ss.Skill.Name).ToList() ?? new List<string>(),
+                    category = seeker.InterestCategory?.Name ?? "General"
+                };
+
+                var jobsList = preFilteredJobs.Select(j => new
+                {
+                    job_id = j.Id,
+                    title = j.Title,
+                    description = j.Description,
+                    required_skills = string.IsNullOrWhiteSpace(j.RequiredSkills) ? new List<string>() : j.RequiredSkills.Split(',').Select(s => s.Trim()).ToList()
+                });
+
+                var candidateJson = JsonSerializer.Serialize(candidateProfile);
+                var jobsJson = JsonSerializer.Serialize(jobsList);
+
+                var prompt = $@"
+                You are a job ranking AI. Rank the following jobs for the candidate based on:
+                1. Skills overlap (highest priority)
+                2. Semantic similarity between job description and candidate skills
+
+                Return ONLY valid JSON in this exact format:
+
+                {{
+                  ""ranked_jobs"": [
+                    {{ ""job_id"": 10, ""score"": 0.92 }},
+                    {{ ""job_id"": 11, ""score"": 0.81 }}
+                  ]
+                }}
+
+                Do not include explanations or text outside JSON.
+
+                Candidate:
+                {candidateJson}
+
+                Jobs:
+                {jobsJson}";
+
+                // 5. Build and call OpenAI SDK (v2.0.0+)
+                var modelName = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+                var chatClient = new ChatClient(modelName, apiKey);
+                
+                var options = new ChatCompletionOptions
+                {
+                    Temperature = 0.2f,
+                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+                };
+
+                var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
+                
+                var aiContent = completion.Value.Content[0].Text;
+
+                var resultDto = JsonSerializer.Deserialize<AIJobRankingResponseDTO>(aiContent);
+                if (resultDto?.RankedJobs == null || !resultDto.RankedJobs.Any())
+                {
+                    return new ApiResponse<List<JobRecommendationResponseDTO>>(200, fallbackResponse);
+                }
+
+                // 6. Merge scores and return sorted
+                var finalRecommendations = preFilteredJobs.Select(j =>
+                {
+                    var ranking = resultDto.RankedJobs.FirstOrDefault(r => r.JobId == j.Id);
+                    return new JobRecommendationResponseDTO
+                    {
+                        Id = j.Id,
+                        Title = j.Title,
+                        Description = j.Description,
+                        MinSalary = j.MinSalary,
+                        MaxSalary = j.MaxSalary,
+                        CategoryName = j.CategoryName,
+                        RequiredSkills = string.IsNullOrWhiteSpace(j.RequiredSkills) ? new() : j.RequiredSkills.Split(',').Select(s => s.Trim()).ToList(),
+                        Score = ranking?.Score
+                    };
+                })
+                .OrderByDescending(j => j.Score ?? -1)
+                .ToList();
+
+                return new ApiResponse<List<JobRecommendationResponseDTO>>(200, finalRecommendations);
+
+            }
+            catch (Exception ex)
+            {
+                // Fallback gracefully on exception
+                Console.WriteLine($"AI Recommendation Failed: {ex.Message}");
+                return new ApiResponse<List<JobRecommendationResponseDTO>>(200, fallbackResponse);
+            }
         }
 
         // ==================== Lookups ====================

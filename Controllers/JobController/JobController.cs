@@ -13,7 +13,7 @@ namespace GoWork.Controllers.JobController
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Company")]
+    [Authorize(Roles = "Candidate,Company,Admin")]
     public class JobController : ControllerBase
     {
         private readonly IJobService _jobService;
@@ -36,6 +36,19 @@ namespace GoWork.Controllers.JobController
 
             var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == userId);
             return employer?.Id;
+        }
+
+        /// <summary>
+        /// Gets the SeekerId from the logged-in user's JWT claim.
+        /// </summary>
+        private async Task<int?> GetSeekerIdAsync()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return null;
+
+            var seeker = await _context.TbSeekers.FirstOrDefaultAsync(s => s.UserId == userId);
+            return seeker?.Id;
         }
 
         // ==================== Job CRUD ====================
@@ -140,6 +153,25 @@ namespace GoWork.Controllers.JobController
             var response = await _jobService.UpdateJobStatusAsync(employerId.Value, id, dto);
             if (response.StatusCode != 200)
                 return StatusCode(response.StatusCode, response);
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get AI-powered job recommendations for the logged-in seeker.
+        /// </summary>
+        [HttpGet("recommendations")]
+        [Authorize(Roles = "Candidate,Company,Admin")]
+        public async Task<ActionResult<ApiResponse<List<JobRecommendationResponseDTO>>>> GetJobRecommendations()
+        {
+            var seekerId = await GetSeekerIdAsync();
+            if (seekerId == null)
+                return Unauthorized(new ApiResponse<string>(401, "Candidate profile not found."));
+
+            var response = await _jobService.GetJobRecommendationsAsync(seekerId.Value);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
             return Ok(response);
         }
 
