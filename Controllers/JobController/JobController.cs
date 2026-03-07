@@ -165,7 +165,7 @@ namespace GoWork.Controllers.JobController
         {
             var seekerId = await GetSeekerIdAsync();
             if (seekerId == null)
-                return Unauthorized(new ApiResponse<string>(401, "Candidate profile not found."));
+                return Unauthorized(new ApiResponse<string>(401, "Access denied. Only registered job seekers can perform this action."));
 
             var response = await _jobService.GetJobRecommendationsAsync(seekerId.Value);
             if (response.StatusCode != 200)
@@ -183,9 +183,32 @@ namespace GoWork.Controllers.JobController
         public async Task<ActionResult<ApiResponse<JobSearchResponseDto>>> SearchJobs([FromQuery] JobSearchRequestDto request)
         {
             // Attach seeker ID if the user is authenticated as Candidate
-            request.SeekerId = await GetSeekerIdAsync();
+            var seekerId = await GetSeekerIdAsync();
+            if (seekerId == null)
+                return Unauthorized(new ApiResponse<string>(401, "Access denied. Only registered job seekers can perform this action."));
+
+            request.SeekerId = seekerId;
 
             var response = await _jobService.SearchJobsAsync(request);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get detailed information for a single job for seekers.
+        /// </summary>
+        [HttpGet("~/api/jobs/{jobId}")]
+        public async Task<ActionResult<ApiResponse<JobDetailsDto>>> GetJobDetails(int jobId)
+        {
+            var seekerId = await GetSeekerIdAsync();
+            if (seekerId == null)
+                return Unauthorized(new ApiResponse<string>(401, "Access denied. Only registered job seekers can perform this action."));
+
+            var response = await _jobService.GetJobDetailsAsync(jobId, seekerId);
+            
             if (response.StatusCode != 200)
             {
                 return StatusCode(response.StatusCode, response);
