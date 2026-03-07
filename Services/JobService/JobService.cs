@@ -446,6 +446,54 @@ namespace GoWork.Services.JobService
             }
         }
 
+        // ==================== Job Details ====================
+
+        public async Task<ApiResponse<JobDetailsDto>> GetJobDetailsAsync(int jobId, int? seekerId)
+        {
+            var jobInfo = await _context.TbJobs
+                .AsNoTracking()
+                .Where(j => j.Id == jobId)
+                .Select(j => new
+                {
+                    Details = new JobDetailsDto
+                    {
+                        Id = j.Id,
+                        Title = j.Title,
+                        Description = j.Description,
+                        Category = j.Category.Name,
+                        JobType = j.JobType.Name,
+                        JobLocationType = j.JobLocationType.Name,
+                        MinSalary = j.MinSalary,
+                        MaxSalary = j.MaxSalary,
+                        Currency = j.Currency.Name,
+                        PostedDate = j.PostedDate,
+                        ExpirationDate = j.ExpirationDate,
+                        Country = j.Address != null && j.Address.Country != null ? j.Address.Country.Name : null,
+                        Skills = j.JobSkills.Select(js => js.Skill.Name).ToList(),
+                        CanApply = seekerId.HasValue && !j.Applications.Any(a => a.SeekerId == seekerId.Value),
+                        Company = new JobDetailsCompanyDto
+                        {
+                            Name = j.Employer.ComapnyName,
+                            LogoUrl = j.Employer.LogoUrl
+                        }
+                    },
+                    JobStatusId = j.JobStatusId
+                })
+                .FirstOrDefaultAsync();
+
+            if (jobInfo == null)
+            {
+                return new ApiResponse<JobDetailsDto>(404, "Job not found.");
+            }
+
+            if (jobInfo.JobStatusId != (int)JobStatusEnum.Published)
+            {
+                return new ApiResponse<JobDetailsDto>(410, "Job is no longer available.");
+            }
+
+            return new ApiResponse<JobDetailsDto>(200, jobInfo.Details);
+        }
+
         // ==================== Job Search ====================
 
         public async Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request)
