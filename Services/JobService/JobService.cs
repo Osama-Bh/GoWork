@@ -446,6 +446,54 @@ namespace GoWork.Services.JobService
             }
         }
 
+        // ==================== Job Applications ====================
+
+        public async Task<ApiResponse<ApplicationResultDto>> ApplyToJobAsync(int jobId, int seekerId)
+        {
+            var job = await _context.TbJobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId);
+            
+            if (job == null)
+            {
+                return new ApiResponse<ApplicationResultDto>(404, "Job not found.");
+            }
+
+            if (job.JobStatusId != (int)JobStatusEnum.Published || job.ExpirationDate < DateTime.UtcNow)
+            {
+                return new ApiResponse<ApplicationResultDto>(400, "Job is closed or expired.");
+            }
+
+            var seekerExists = await _context.TbSeekers.AnyAsync(s => s.Id == seekerId);
+            if (!seekerExists)
+            {
+                return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
+            }
+
+            var alreadyApplied = await _context.TbApplications.AnyAsync(a => a.JobId == jobId && a.SeekerId == seekerId);
+            if (alreadyApplied)
+            {
+                return new ApiResponse<ApplicationResultDto>(400, "You have already applied for this job.");
+            }
+
+            var application = new Application
+            {
+                JobId = jobId,
+                SeekerId = seekerId,
+                ApplicationDate = DateTime.UtcNow,
+                ApplicationStatusId = (int)ApplicationStatusEnum.PendingReview
+            };
+
+            _context.TbApplications.Add(application);
+            await _context.SaveChangesAsync();
+
+            var result = new ApplicationResultDto
+            {
+                ApplicationId = application.Id,
+                Message = "Application submitted successfully."
+            };
+
+            return new ApiResponse<ApplicationResultDto>(200, result);
+        }
+
         // ==================== Job Details ====================
 
         public async Task<ApiResponse<JobDetailsDto>> GetJobDetailsAsync(int jobId, int? seekerId)
