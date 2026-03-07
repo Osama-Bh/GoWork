@@ -216,6 +216,25 @@ namespace GoWork.Controllers.JobController
             return Ok(response);
         }
 
+        /// <summary>
+        /// Applies the logged-in Candidate to the specified job.
+        /// </summary>
+        [HttpPost("~/api/jobs/{jobId}/apply")]
+        public async Task<ActionResult<ApiResponse<ApplicationResultDto>>> ApplyToJob(int jobId)
+        {
+            var seekerId = await GetSeekerIdAsync();
+            if (seekerId == null)
+                return Unauthorized(new ApiResponse<string>(401, "Access denied. Only registered job seekers can perform this action."));
+
+            var response = await _jobService.ApplyToJobAsync(jobId, seekerId.Value);
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+            return Ok(response);
+        }
+
         // ==================== Lookup Endpoints (for combo boxes) ====================
 
         /// <summary>
