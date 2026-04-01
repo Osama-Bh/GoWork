@@ -1,4 +1,4 @@
-﻿using ECommerceApp.DTOs;
+using ECommerceApp.DTOs;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.DTOs.JobDTOs;
 
@@ -20,7 +20,7 @@ namespace GoWork.Services.JobService
 
         Task<ApiResponse<ConfirmationResponseDTO>> DeleteJobAsync(int employerId, int id);
 
-        Task<ApiResponse<List<JobRecommendationResponseDTO>>> GetJobRecommendationsAsync(int seekerId);
+        Task<ApiResponse<JobRecommendationResultDto>> GetJobRecommendationsAsync(int seekerId);
 
         Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request);
 

@@ -1,4 +1,4 @@
-﻿using ECommerceApp.DTOs;
+using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.DTOs.JobDTOs;
@@ -161,7 +161,7 @@ namespace GoWork.Controllers.JobController
         /// </summary>
         [HttpGet("recommendations")]
         [Authorize(Roles = "Candidate,Company,Admin")]
-        public async Task<ActionResult<ApiResponse<List<JobRecommendationResponseDTO>>>> GetJobRecommendations()
+        public async Task<ActionResult<ApiResponse<JobRecommendationResultDto>>> GetJobRecommendations()
         {
             var seekerId = await GetSeekerIdAsync();
             if (seekerId == null)
