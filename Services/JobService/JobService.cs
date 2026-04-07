@@ -573,14 +573,14 @@ namespace GoWork.Services.JobService
                              request.JobLocationTypeId == null &&
                              request.CountryId == null;
 
-            if (noFilters && request.SeekerId.HasValue)
-            {
-                var seeker = await _context.TbSeekers.FirstOrDefaultAsync(s => s.Id == request.SeekerId.Value);
-                if (seeker != null)
-                {
-                    query = query.Where(j => j.CategoryId == seeker.InterestCategoryId);
-                }
-            }
+            //if (noFilters && request.SeekerId.HasValue)
+            //{
+            //    var seeker = await _context.TbSeekers.FirstOrDefaultAsync(s => s.Id == request.SeekerId.Value);
+            //    if (seeker != null)
+            //    {
+            //        query = query.Where(j => j.CategoryId == seeker.InterestCategoryId);
+            //    }
+            //}
             
             // Apply text search
             if (!string.IsNullOrWhiteSpace(request.Search))

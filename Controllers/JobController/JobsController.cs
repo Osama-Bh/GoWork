@@ -14,12 +14,12 @@ namespace GoWork.Controllers.JobController
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Candidate,Company,Admin")]
-    public class JobController : ControllerBase
+    public class JobsController : ControllerBase
     {
         private readonly IJobService _jobService;
         private readonly ApplicationDbContext _context;
 
-        public JobController(IJobService jobService, ApplicationDbContext context)
+        public JobsController(IJobService jobService, ApplicationDbContext context)
         {
             _jobService = jobService;
             _context = context;
@@ -200,7 +200,7 @@ namespace GoWork.Controllers.JobController
         /// <summary>
         /// Get detailed information for a single job for seekers.
         /// </summary>
-        [HttpGet("~/api/jobs/{jobId}")]
+        [HttpGet("{jobId}")]
         public async Task<ActionResult<ApiResponse<JobDetailsDto>>> GetJobDetails(int jobId)
         {
             var seekerId = await GetSeekerIdAsync();
@@ -219,7 +219,7 @@ namespace GoWork.Controllers.JobController
         /// <summary>
         /// Applies the logged-in Candidate to the specified job.
         /// </summary>
-        [HttpPost("~/api/jobs/{jobId}/apply")]
+        [HttpPost("{jobId}/apply")]
         public async Task<ActionResult<ApiResponse<ApplicationResultDto>>> ApplyToJob(int jobId)
         {
             var seekerId = await GetSeekerIdAsync();
