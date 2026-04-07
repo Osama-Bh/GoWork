@@ -4,6 +4,7 @@ using GoWork.DTOs.DashboardDTOs;
 using GoWork.DTOs.JobDTOs;
 using GoWork.Enums;
 using GoWork.Models;
+using GoWork.Services.FileService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
@@ -15,11 +16,13 @@ namespace GoWork.Services.JobService
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IFileService _fileService;
 
-        public JobService(ApplicationDbContext context, IConfiguration configuration)
+        public JobService(ApplicationDbContext context, IConfiguration configuration, IFileService fileService)
         {
             _context = context;
             _configuration = configuration;
+            _fileService = fileService;
         }
 
         // ==================== Job CRUD ====================
@@ -462,6 +465,14 @@ namespace GoWork.Services.JobService
                 .Cast<JobCardDto>()
                 .ToList();
 
+            foreach (var recommendation in responseDto.Recommendations)
+            {
+                if (!string.IsNullOrWhiteSpace(recommendation.CompanyLogoUrl))
+                {
+                    recommendation.CompanyLogoUrl = _fileService.DownloadUrlAsync(recommendation.CompanyLogoUrl)?.SasUrl;
+                }
+            }
+
             return new ApiResponse<JobRecommendationResultDto>(200, responseDto);
         }
 
@@ -558,6 +569,11 @@ namespace GoWork.Services.JobService
                 return new ApiResponse<JobDetailsDto>(410, "Job is no longer available.");
             }
 
+            if (jobInfo.Details != null && jobInfo.Details.Company != null && !string.IsNullOrWhiteSpace(jobInfo.Details.Company.LogoUrl))
+            {
+                jobInfo.Details.Company.LogoUrl = _fileService.DownloadUrlAsync(jobInfo.Details.Company.LogoUrl)?.SasUrl;
+            }
+
             return new ApiResponse<JobDetailsDto>(200, jobInfo.Details);
         }
 
@@ -646,6 +662,14 @@ namespace GoWork.Services.JobService
                     PostedDate = j.PostedDate
                 })
                 .ToListAsync();
+
+            foreach (var job in pagedJobs)
+            {
+                if (!string.IsNullOrWhiteSpace(job.CompanyLogoUrl))
+                {
+                    job.CompanyLogoUrl = _fileService.DownloadUrlAsync(job.CompanyLogoUrl)?.SasUrl;
+                }
+            }
 
             return new ApiResponse<JobSearchResponseDto>(200, new JobSearchResponseDto
             {
