@@ -240,6 +240,7 @@ namespace GoWork.Controllers.JobController
         /// <summary>
         /// Get all job categories.
         /// </summary>
+        [AllowAnonymous]
         [HttpGet("categories")]
         public async Task<ActionResult<ApiResponse<List<LookupDTO>>>> GetCategories([FromQuery] string? search = null)
         {
@@ -324,6 +325,7 @@ namespace GoWork.Controllers.JobController
         /// <summary>
         /// Search skills (for combo box, returns max 50 results).
         /// </summary>
+        [AllowAnonymous]
         [HttpGet("skills")]
         public async Task<ActionResult<ApiResponse<List<SkillDTO>>>> GetSkills([FromQuery] string? search = null)
         {
