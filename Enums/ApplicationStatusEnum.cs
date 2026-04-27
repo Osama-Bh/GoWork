@@ -7,7 +7,8 @@
         Rejected = 3,   // Not selected
         Accepted = 4,   // Approved to move forward (e.g., to interview)
         //OfferExtended = 5,   // Job offer sent
-        Hired = 6    // Candidate accepted offer and is hired
+        Hired = 6,   // Candidate accepted offer and is hired,
+        Withdrawn = 7    // Candidate withdrew the application
     }
 
 }

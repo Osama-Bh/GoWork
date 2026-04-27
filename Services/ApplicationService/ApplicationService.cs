@@ -70,6 +70,7 @@ namespace GoWork.Services.ApplicationService
                 .Select(a => new ApplicationDTO
                 {
                     ApplicationId = a.Id,
+                    JobId = a.JobId,
                     JobTitle = a.Job.Title,
                     CompanyName = a.Job.Employer.ComapnyName,
                     CompanyLogo = a.Job.Employer.LogoUrl,
