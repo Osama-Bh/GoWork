@@ -379,26 +379,51 @@ namespace GoWork.Services.JobService
                     var candidateJson = JsonSerializer.Serialize(candidateProfile);
                     var jobsJson = JsonSerializer.Serialize(jobsList);
 
+                    //var prompt = $@"
+                    //You are a job ranking AI. Rank the following jobs for the candidate based on:
+                    //1. Skills overlap (highest priority)
+                    //2. Semantic similarity between job description and candidate skills
+
+                    //Return ONLY valid JSON in this exact format:
+
+                    //{{
+                    //  ""ranked_jobs"": [
+                    //    {{ ""job_id"": 10, ""score"": 0.92 }},
+                    //    {{ ""job_id"": 11, ""score"": 0.81 }}
+                    //  ]
+                    //}}
+
+                    //Do not include explanations or text outside JSON.
+
+                    //Candidate:
+                    //{candidateJson}
+
+                    //Jobs:
+                    //{jobsJson}";
+
                     var prompt = $@"
-                    You are a job ranking AI. Rank the following jobs for the candidate based on:
-                    1. Skills overlap (highest priority)
-                    2. Semantic similarity between job description and candidate skills
+                    You are an expert AI recruiter. Your task is to evaluate and rank a list of jobs based on how well they match a candidate's profile.
 
-                    Return ONLY valid JSON in this exact format:
+                    Evaluation Criteria:
+                    1. Validate each job's required skills and description against the candidate's skills and interest category.
+                    2. Calculate a relevance score between 0.0 and 1.0 for each job (where 1.0 is a perfect match).
+                    3. Rank the job IDs strictly from most relevant (highest score) to least relevant (lowest score).
+                    4. You must include all provided jobs in the final ranking.
 
+                    Return ONLY a valid JSON object in this exact format:
                     {{
                       ""ranked_jobs"": [
-                        {{ ""job_id"": 10, ""score"": 0.92 }},
-                        {{ ""job_id"": 11, ""score"": 0.81 }}
+                        {{ ""job_id"": 10, ""score"": 0.95 }},
+                        {{ ""job_id"": 11, ""score"": 0.82 }}
                       ]
                     }}
 
-                    Do not include explanations or text outside JSON.
+                    Do not include any explanations, markdown formatting, or text outside the JSON.
 
-                    Candidate:
+                    Candidate Data:
                     {candidateJson}
 
-                    Jobs:
+                    Jobs Data:
                     {jobsJson}";
 
                     // 5. Call OpenAI
