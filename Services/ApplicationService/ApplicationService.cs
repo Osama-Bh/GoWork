@@ -1,4 +1,4 @@
-﻿using ECommerceApp.DTOs;
+using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs;
 using GoWork.DTOs.ApplicationDTOs;
@@ -100,6 +100,29 @@ namespace GoWork.Services.ApplicationService
                 TotalPages = totalPages,
                 HasNextPage = requestDTO.Page < totalPages
             });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> WithdrawApplicationAsync(int applicationId, int userId)
+        {
+            var seeker = await _context.TbSeekers
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (seeker == null)
+                return new ApiResponse<ConfirmationResponseDTO>(404, "seeker not found");
+
+            var application = await _context.TbApplications
+                .FirstOrDefaultAsync(a => a.Id == applicationId && a.SeekerId == seeker.Id);
+
+            if (application == null)
+                return new ApiResponse<ConfirmationResponseDTO>(404, "Application not found.");
+
+            if (application.ApplicationStatusId != (int)ApplicationStatusEnum.PendingReview)
+                return new ApiResponse<ConfirmationResponseDTO>(400, "Only applications under pending review can be withdrawn.");
+
+            application.ApplicationStatusId = (int)ApplicationStatusEnum.Withdrawn;
+            await _context.SaveChangesAsync();
+
+            return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Application withdrawn successfully." });
         }
     }
 }

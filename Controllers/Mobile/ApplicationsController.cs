@@ -1,7 +1,8 @@
-﻿using ECommerceApp.DTOs;
+using ECommerceApp.DTOs;
 using GoWork.DTOs;
 using GoWork.DTOs.ApplicationDTOs;
 using GoWork.Services.ApplicationService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ namespace GoWork.Controllers.Mobile
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ApplicationsController : ControllerBase
     {
         private readonly IApplicationService _applicationService;
@@ -20,6 +22,7 @@ namespace GoWork.Controllers.Mobile
         }
 
         [HttpGet]
+        [Authorize(Roles = "Candidate, Admin")]
         public async Task<ActionResult<ApiResponse<ApplicationsResponseDTO>>> GetCandidateApplications([FromQuery] ApplicationsRequestDTO requestDTO)
         {
             var claims = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -47,6 +50,25 @@ namespace GoWork.Controllers.Mobile
             {
                 return StatusCode(response.StatusCode, response);
             }
+            return Ok(response);
+        }
+
+        [HttpPost("withdraw/{applicationId}")]
+        [Authorize(Roles = "Candidate, Admin")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> WithdrawApplication(int applicationId)
+        {
+            var claims = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claims == null || !int.TryParse(claims.Value, out int id))
+            {
+                return Unauthorized("Unauthorized: User not found.");
+            }
+
+            var response = await _applicationService.WithdrawApplicationAsync(applicationId, id);
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+
             return Ok(response);
         }
     }
