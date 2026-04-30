@@ -307,7 +307,7 @@ namespace GoWork.Service.AccountService
                     Message = "There is a code have been sent to your email please check"
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
 
@@ -321,7 +321,7 @@ namespace GoWork.Service.AccountService
 
                 return new ApiResponse<ConfirmationResponseDTO>(
                     500,
-                    "Registration failed. Please try again."
+                    ex.Message
                 );
             }
 
