@@ -1,6 +1,7 @@
 using ECommerceApp.DTOs;
 using GoWork.DTOs;
 using GoWork.DTOs.ApplicationDTOs;
+using GoWork.DTOs.DashboardDTOs;
 using GoWork.Services.ApplicationService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,10 +16,12 @@ namespace GoWork.Controllers.Mobile
     public class ApplicationsController : ControllerBase
     {
         private readonly IApplicationService _applicationService;
+        
 
         public ApplicationsController(IApplicationService applicationService)
         {
             _applicationService = applicationService;
+            
         }
 
         [HttpGet]
@@ -70,6 +73,57 @@ namespace GoWork.Controllers.Mobile
             }
 
             return Ok(response);
+        }
+
+        //--------
+
+        /// <summary>
+        /// Retrieves a paginated list of job applications for the currently logged-in company (Employer).
+        /// Supports filtering by SearchTerm (Name/Email), JobId, and StatusId.
+        /// </summary>
+        [Authorize(Roles = "Company")]
+        [HttpGet("applications")]
+        public async Task<IActionResult> GetJobApplications([FromQuery] CompanyApplicationsFilterDTO filter)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+            {
+                return Unauthorized(new { Message = "User ID not found or invalid." });
+            }
+
+            try
+            {
+                var result = await _applicationService.GetJobApplicationsAsync(userId, filter);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Updates the status of a specific job application (e.g., Accept or Reject).
+        /// Only the company that owns the job can update the application status.
+        /// </summary>
+        [Authorize(Roles = "Company")]
+        [HttpPut("applications/{applicationId}/status")]
+        public async Task<IActionResult> UpdateApplicationStatus(int applicationId, [FromBody] UpdateApplicationStatusDTO dto)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+            {
+                return Unauthorized(new { Message = "User ID not found or invalid." });
+            }
+
+            var success = await _applicationService.UpdateApplicationStatusAsync(userId, applicationId, dto.StatusId);
+
+            if (!success)
+            {
+                return BadRequest(new { Message = "Failed to update status. Application not found, not authorized, or invalid status ID." });
+            }
+
+            return Ok(new { Message = "Application status updated successfully." });
         }
     }
 }

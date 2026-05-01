@@ -2,6 +2,7 @@ using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs;
 using GoWork.DTOs.ApplicationDTOs;
+using GoWork.DTOs.DashboardDTOs;
 using GoWork.Enums;
 using GoWork.Services.FileService;
 using Microsoft.EntityFrameworkCore;
@@ -123,6 +124,102 @@ namespace GoWork.Services.ApplicationService
             await _context.SaveChangesAsync();
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Application withdrawn successfully." });
+        }
+
+
+        // ----------------------
+
+        public async Task<PaginatedResult<CompanyApplicationDTO>> GetJobApplicationsAsync(int employerUserId, CompanyApplicationsFilterDTO filter)
+        {
+            var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+            if (employer == null)
+            {
+                throw new Exception("Employer not found.");
+            }
+
+            var query = _context.TbApplications
+                .Include(a => a.Seeker)
+                .ThenInclude(s => s.ApplicationUser)
+                .Include(a => a.Job)
+                .Include(a => a.ApplicationStatus)
+                .Where(a => a.Job.EmployerId == employer.Id)
+                .AsQueryable();
+
+            if (filter.JobId.HasValue && filter.JobId.Value > 0)
+            {
+                query = query.Where(a => a.JobId == filter.JobId.Value);
+            }
+
+            if (filter.StatusId.HasValue && filter.StatusId.Value > 0)
+            {
+                query = query.Where(a => a.ApplicationStatusId == filter.StatusId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+            {
+                var searchTerm = filter.SearchTerm.ToLower();
+                query = query.Where(a =>
+                    (a.Seeker.FirsName + " " + a.Seeker.LastName).ToLower().Contains(searchTerm) ||
+                    (a.Seeker.ApplicationUser.Email != null && a.Seeker.ApplicationUser.Email.ToLower().Contains(searchTerm))
+                );
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var applications = await query
+                .OrderByDescending(a => a.ApplicationDate)
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(a => new CompanyApplicationDTO
+                {
+                    ApplicationId = a.Id,
+                    CandidateName = $"{a.Seeker.FirsName} {a.Seeker.LastName}",
+                    CandidateEmail = a.Seeker.ApplicationUser.Email ?? string.Empty,
+                    JobTitle = a.Job.Title,
+                    ApplicationDate = a.ApplicationDate,
+                    CandidateDescription = a.Seeker.Major ?? string.Empty,
+                    ResumeUrl = a.Seeker.ResumeUrl,
+                    StatusId = a.ApplicationStatusId,
+                    StatusName = a.ApplicationStatus.Name
+                })
+                .ToListAsync();
+
+            return new PaginatedResult<CompanyApplicationDTO>
+            {
+                Items = applications,
+                TotalCount = totalCount,
+                CurrentPage = filter.Page,
+                PageSize = filter.PageSize
+            };
+        }
+
+        public async Task<bool> UpdateApplicationStatusAsync(int employerUserId, int applicationId, int newStatusId)
+        {
+            var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+            if (employer == null)
+            {
+                return false;
+            }
+
+            var application = await _context.TbApplications
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a => a.Id == applicationId && a.Job.EmployerId == employer.Id);
+
+            if (application == null)
+            {
+                return false;
+            }
+
+            var statusExists = await _context.TbApplicationStatuses.AnyAsync(s => s.Id == newStatusId);
+            if (!statusExists)
+            {
+                return false;
+            }
+
+            application.ApplicationStatusId = newStatusId;
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }
