@@ -5,6 +5,7 @@ using GoWork.Services.AdminService;
 using GoWork.Services.ApplicationService;
 using GoWork.Services.EmailService;
 using GoWork.Services.FileService;
+using GoWork.Services.InterviewService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -120,7 +121,8 @@ namespace GoWork
             builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<GoWork.Services.JobService.IJobService, GoWork.Services.JobService.JobService>();
-            builder.Services.AddScoped<IApplicationService, ApplicationService>(); 
+            builder.Services.AddScoped<IApplicationService, ApplicationService>();
+            builder.Services.AddScoped<IInterviewService, InterviewService>();
             #endregion
 
 
