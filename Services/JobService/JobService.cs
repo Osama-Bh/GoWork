@@ -170,6 +170,7 @@ namespace GoWork.Services.JobService
             // Create job
             var job = new Job
             {
+
                 Title = dto.Title,
                 Description = dto.Description,
                 EmployerId = employerId,
@@ -192,7 +193,7 @@ namespace GoWork.Services.JobService
 
             return new ApiResponse<ConfirmationResponseDTO>(201, new ConfirmationResponseDTO
             {
-                Message = "Job created successfully."
+                Message = "Job created successfully.",
             });
         }
 

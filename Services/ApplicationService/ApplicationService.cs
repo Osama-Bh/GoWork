@@ -129,17 +129,84 @@ namespace GoWork.Services.ApplicationService
 
         // ----------------------
 
-        public async Task<PaginatedResult<CompanyApplicationDTO>> GetJobApplicationsAsync(int employerUserId, CompanyApplicationsFilterDTO filter)
+        //public async Task<PaginatedResult<CompanyApplicationDTO>> GetJobApplicationsAsync(int employerUserId, CompanyApplicationsFilterDTO filter)
+        //{
+        //    var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+        //    if (employer == null)
+        //    {
+        //        throw new Exception("Employer not found.");
+        //    }
+
+        //    var query = _context.TbApplications
+        //        .Include(a => a.Seeker)
+        //        .ThenInclude(s => s.ApplicationUser)
+        //        .Include(a => a.Job)
+        //        .Include(a => a.ApplicationStatus)
+        //        .Where(a => a.Job.EmployerId == employer.Id)
+        //        .AsQueryable();
+
+        //    if (filter.JobId.HasValue && filter.JobId.Value > 0)
+        //    {
+        //        query = query.Where(a => a.JobId == filter.JobId.Value);
+        //    }
+
+        //    if (filter.StatusId.HasValue && filter.StatusId.Value > 0)
+        //    {
+        //        query = query.Where(a => a.ApplicationStatusId == filter.StatusId.Value);
+        //    }
+
+        //    if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        //    {
+        //        var searchTerm = filter.SearchTerm.ToLower();
+        //        query = query.Where(a =>
+        //            (a.Seeker.FirsName + " " + a.Seeker.LastName).ToLower().Contains(searchTerm) ||
+        //            (a.Seeker.ApplicationUser.Email != null && a.Seeker.ApplicationUser.Email.ToLower().Contains(searchTerm))
+        //        );
+        //    }
+
+        //    var totalCount = await query.CountAsync();
+
+        //    var applications = await query
+        //        .OrderByDescending(a => a.ApplicationDate)
+        //        .Skip((filter.Page - 1) * filter.PageSize)
+        //        .Take(filter.PageSize)
+        //        .Select(a => new CompanyApplicationDTO
+        //        {
+        //            ApplicationId = a.Id,
+        //            CandidateName = $"{a.Seeker.FirsName} {a.Seeker.LastName}",
+        //            CandidateEmail = a.Seeker.ApplicationUser.Email ?? string.Empty,
+        //            JobTitle = a.Job.Title,
+        //            ApplicationDate = a.ApplicationDate,
+        //            CandidateDescription = a.Seeker.Major ?? string.Empty,
+        //            ResumeUrl = a.Seeker.ResumeUrl,
+        //            StatusId = a.ApplicationStatusId,
+        //            StatusName = a.ApplicationStatus.Name
+        //        })
+        //        .ToListAsync();
+
+        //    return new PaginatedResult<CompanyApplicationDTO>
+        //    {
+        //        Items = applications,
+        //        TotalCount = totalCount,
+        //        CurrentPage = filter.Page,
+        //        PageSize = filter.PageSize
+        //    };
+        //}
+
+
+        public async Task<PaginatedResult<CompanyApplicationDTO>> GetJobApplicationsAsync(
+    int employerUserId,
+    CompanyApplicationsFilterDTO filter)
         {
-            var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+            var employer = await _context.TbEmployers
+                .FirstOrDefaultAsync(e => e.UserId == employerUserId);
+
             if (employer == null)
-            {
                 throw new Exception("Employer not found.");
-            }
 
             var query = _context.TbApplications
                 .Include(a => a.Seeker)
-                .ThenInclude(s => s.ApplicationUser)
+                    .ThenInclude(s => s.ApplicationUser)
                 .Include(a => a.Job)
                 .Include(a => a.ApplicationStatus)
                 .Where(a => a.Job.EmployerId == employer.Id)
@@ -158,31 +225,55 @@ namespace GoWork.Services.ApplicationService
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
             {
                 var searchTerm = filter.SearchTerm.ToLower();
+
                 query = query.Where(a =>
-                    (a.Seeker.FirsName + " " + a.Seeker.LastName).ToLower().Contains(searchTerm) ||
-                    (a.Seeker.ApplicationUser.Email != null && a.Seeker.ApplicationUser.Email.ToLower().Contains(searchTerm))
+                    (a.Seeker.FirsName + " " + a.Seeker.LastName)
+                        .ToLower()
+                        .Contains(searchTerm)
+                    ||
+                    (a.Seeker.ApplicationUser.Email != null &&
+                     a.Seeker.ApplicationUser.Email.ToLower().Contains(searchTerm))
                 );
             }
 
             var totalCount = await query.CountAsync();
 
-            var applications = await query
+            // STEP 1: Fetch raw data first
+            var rawApplications = await query
                 .OrderByDescending(a => a.ApplicationDate)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(a => new CompanyApplicationDTO
+                .Select(a => new
                 {
-                    ApplicationId = a.Id,
-                    CandidateName = $"{a.Seeker.FirsName} {a.Seeker.LastName}",
-                    CandidateEmail = a.Seeker.ApplicationUser.Email ?? string.Empty,
+                    a.Id,
+                    CandidateName = a.Seeker.FirsName + " " + a.Seeker.LastName,
+                    CandidateEmail = a.Seeker.ApplicationUser.Email,
                     JobTitle = a.Job.Title,
-                    ApplicationDate = a.ApplicationDate,
-                    CandidateDescription = a.Seeker.Major ?? string.Empty,
-                    ResumeUrl = a.Seeker.ResumeUrl,
+                    a.ApplicationDate,
+                    CandidateDescription = a.Seeker.Major,
+                    ResumeBlobUrl = a.Seeker.ResumeUrl,
                     StatusId = a.ApplicationStatusId,
                     StatusName = a.ApplicationStatus.Name
                 })
                 .ToListAsync();
+
+            // STEP 2: Transform with FileService in memory
+            var applications = rawApplications
+                .Select(a => new CompanyApplicationDTO
+                {
+                    ApplicationId = a.Id,
+                    CandidateName = a.CandidateName,
+                    CandidateEmail = a.CandidateEmail ?? string.Empty,
+                    JobTitle = a.JobTitle,
+                    ApplicationDate = a.ApplicationDate,
+                    CandidateDescription = a.CandidateDescription ?? string.Empty,
+                    ResumeUrl = string.IsNullOrWhiteSpace(a.ResumeBlobUrl)
+                        ? null
+                        : _fileService.DownloadUrlAsync(a.ResumeBlobUrl).SasUrl,
+                    StatusId = a.StatusId,
+                    StatusName = a.StatusName
+                })
+                .ToList();
 
             return new PaginatedResult<CompanyApplicationDTO>
             {
