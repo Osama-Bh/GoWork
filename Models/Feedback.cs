@@ -13,9 +13,11 @@ namespace GoWork.Models
         public int FeedbackTypeId { get; set; }
         [ForeignKey("FeedbackTypeId")]
         public FeedbackType FeedbackType { get; set; } = null!;
-        [Required(ErrorMessage = "Address Line 1 is required.")]
-        [StringLength(300, ErrorMessage = "Message cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "Message is required.")]
+        [StringLength(300, ErrorMessage = "Message cannot exceed 300 characters.")]
         public string Message { get; set; } = null!;
         public bool IsRead { get; set; }
+
+        public DateTime CreatedAt { get; set; }
     }
 }
