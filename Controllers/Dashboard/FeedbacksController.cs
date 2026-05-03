@@ -1,4 +1,6 @@
 using ECommerceApp.DTOs;
+using GoWork.DTOs;
+using GoWork.DTOs.DashboardDTOs;
 using GoWork.DTOs.FeedbackDTOs;
 using GoWork.Services.FeedbackService;
 using Microsoft.AspNetCore.Authorization;
@@ -48,12 +50,13 @@ namespace GoWork.Controllers.Dashboard
         /// </summary>
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<List<FeedbackResponseDTO>>>> GetFeedbacks(
-            [FromQuery] int? feedbackTypeId)
+        public async Task<ActionResult<ApiResponse<PaginatedResult<FeedbackResponseDTO>>>> GetFeedbacks(
+            [FromQuery] int? feedbackTypeId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var response = await _feedbackService.GetAllFeedbacksAsync(feedbackTypeId);
+            var response = await _feedbackService.GetAllFeedbacksAsync(feedbackTypeId, pageNumber, pageSize);
             return Ok(response);
-        
         }
 
         [HttpGet("types")]
