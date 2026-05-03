@@ -1,0 +1,96 @@
+using ECommerceApp.DTOs;
+using GoWork.DTOs.FeedbackDTOs;
+using GoWork.Services.FeedbackService;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace GoWork.Controllers.Dashboard
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class FeedbacksController : ControllerBase
+    {
+        private readonly IFeedbackService _feedbackService;
+
+        public FeedbacksController(IFeedbackService feedbackService)
+        {
+            _feedbackService = feedbackService;
+        }
+
+        /// <summary>
+        /// Submit a new feedback message (FeatureRequest or Complaint).
+        /// </summary>
+        /// <remarks>
+        /// The authenticated user's ID is used as the ReviewerId.
+        /// FeedbackType values: 1 = FeatureRequest, 2 = Complaint.
+        /// </remarks>
+        [HttpPost]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> SubmitFeedback(
+            [FromBody] SubmitFeedbackDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request data."));
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var response = await _feedbackService.SubmitFeedbackAsync(userId, dto);
+
+            if (response.StatusCode != 200)
+                return StatusCode(response.StatusCode, response);
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get all feedback entries (Admin only).
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponse<List<FeedbackResponseDTO>>>> GetFeedbacks(
+            [FromQuery] int? feedbackTypeId)
+        {
+            var response = await _feedbackService.GetAllFeedbacksAsync(feedbackTypeId);
+            return Ok(response);
+        
+        }
+
+        [HttpGet("types")]
+        public async Task<ActionResult<ApiResponse<List<LookUpDTO>>>> GetFeedbackTypes()
+        {
+            var response = await _feedbackService.GetFeedbackTypesAsync();
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Mark a feedback as read (Admin only).
+        /// </summary>
+        [HttpPatch("{id}/read")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> MarkAsRead(int id)
+        {
+            var response = await _feedbackService.MarkAsReadAsync(id);
+
+            if (response.StatusCode != 200)
+                return StatusCode(response.StatusCode, response);
+
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Delete a feedback entry (Admin only).
+        /// </summary>
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> DeleteFeedback(int id)
+        {
+            var response = await _feedbackService.DeleteFeedbackAsync(id);
+
+            if (response.StatusCode != 200)
+                return StatusCode(response.StatusCode, response);
+
+            return Ok(response);
+        }
+    }
+}
