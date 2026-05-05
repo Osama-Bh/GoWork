@@ -219,46 +219,80 @@ namespace GoWork.Services.FeedbackService
                 new ConfirmationResponseDTO { Message = "Feedback deleted successfully." });
         }
 
+        private string PrepareEmailBody(string Message)
+        {
+            return $@"                <!DOCTYPE html>
+                <html lang=""ar"" dir=""rtl"">
+                <head>
+                    <meta charset=""UTF-8"">
+                    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                    <title>Masarak Email</title>
+                </head>
+                <body style=""margin:0; background:#f5f5f5;"">
+
+                    <div style=""font-family: Tahoma, Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background:#ffffff;"">
+
+                        <!-- Header -->
+                        <div style=""background: linear-gradient(135deg, #01bafd 0%, #0199db 100%); padding: 30px; text-align: center;"">
+                            <h1 style=""color: white; margin: 0; font-size: 28px; font-weight: 700;"">
+                                Masarak.
+                            </h1>
+                        </div>
+
+                        <!-- Content -->
+                        <div style=""padding: 30px; text-align: right;"">
+
+                            <h2 style=""color: #1f2937; margin-top: 0; font-size: 22px; font-weight: 600;"">
+                                ??????
+                            </h2>
+
+                            <p style=""color: #4b5563; line-height: 1.8; font-size: 16px;"">
+                                ????? ??????? ????. ???? ??????? ??????? ??????? ??????? ?? ???? ?? ???? ??????
+                            </p>
+
+                            <!-- Message Box -->
+                            <div style=""background-color: #f9fafb; border-right: 4px solid #02b5f1;border-left: 4px solid #02b5f1; padding: 15px; margin: 30px 0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"">
+                                <p style=""color: #374151; font-size: 14px; font-weight: bold; margin: 0; line-height: 1.8; white-space: pre-wrap;"">{Message}</p>
+                            </div>
+
+                            <p style=""color: #4b5563; line-height: 1.8; font-size: 16px;"">
+                                ??? ???? ???????? ????? ?????? ??? ????? ??????? ????? ??? ?????????. ??? ???? ???? ?? ????????? ?????? ?? ????? ??? ?????? ????? ??? ????? ?? ??????? ????
+                            </p>
+
+                            <!-- Signature -->
+                            <div style=""margin-top: 40px; padding-top: 25px; border-top: 1px solid #f3f4f6; text-align: center;"">
+                                <p style=""color: #9ca3af; font-size: 14px; margin: 0;"">
+                                    ?? ???? ???????
+                                </p>
+
+                                <p style=""color: #02b5f1; font-weight: 700; font-size: 18px; margin: 8px 0;"">
+                                    Masarak.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer -->
+                        <div style=""background-color: #f9fafb; padding: 25px; text-align: center; border-top: 1px solid #f3f4f6;"">
+            
+                            <p style=""color: #9ca3af; font-size: 13px; margin: 0;"">
+                                © 2026 Masarak. ???? ?????? ?????
+                            </p>
+                        </div>
+
+                    </div>
+
+                </body>
+                </html>";
+        }
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> SendEmailReplyAsync(SendEmailRequestDTO dto)
         {
             try
             {
                 var defaultSubject = "Response to your Feedback - GoWork";
-                //await _emailService.SendEmailAsync(dto.Email, defaultSubject, dto.Message);
 
-                var htmlBody = $@"
-                <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"">
-                    <div style=""background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 30px; text-align: center;"">
-                        <h1 style=""color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;"">GoWork</h1>
-                    </div>
-                    <div style=""padding: 40px; background-color: #ffffff;"">
-                        <h2 style=""color: #1f2937; margin-top: 0; font-size: 22px; font-weight: 600;"">Hello!</h2>
-                        <p style=""color: #4b5563; line-height: 1.6; font-size: 16px;"">
-                            Thank you for reaching out to us. We have carefully reviewed your feedback and here is our response:
-                        </p>
-                        <div style=""background-color: #f9fafb; border-left: 4px solid #6366f1; padding: 25px; margin: 30px 0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"">
-                            <p style=""color: #374151; font-size: 16px; margin: 0; line-height: 1.7; white-space: pre-wrap;"">
-                                {dto.Message}
-                            </p>
-                        </div>
-                        <p style=""color: #4b5563; line-height: 1.6; font-size: 16px;"">
-                            We value your input and are committed to improving our services based on your suggestions. If you have any further questions or need additional assistance, please don't hesitate to contact us.
-                        </p>
-                        <div style=""margin-top: 40px; padding-top: 25px; border-top: 1px solid #f3f4f6; text-align: center;"">
-                            <p style=""color: #9ca3af; font-size: 14px; margin: 0;"">Best Regards,</p>
-                            <p style=""color: #6366f1; font-weight: 700; font-size: 18px; margin: 8px 0;"">The GoWork Team</p>
-                        </div>
-                    </div>
-                    <div style=""background-color: #f9fafb; padding: 25px; text-align: center; border-top: 1px solid #f3f4f6;"">
-                        <p style=""color: #9ca3af; font-size: 13px; margin: 0;"">
-                            &copy; 2026 GoWork Inc. Building the future of work.
-                        </p>
-                        <div style=""margin-top: 10px;"">
-                            <a href=""#"" style=""color: #6366f1; text-decoration: none; font-size: 13px; margin: 0 10px;"">Privacy Policy</a>
-                            <a href=""#"" style=""color: #6366f1; text-decoration: none; font-size: 13px; margin: 0 10px;"">Support</a>
-                        </div>
-                    </div>
-                </div>";
+                var htmlBody = PrepareEmailBody(dto.Message);
 
                 await _emailService.SendEmailAsync(dto.Email, defaultSubject, htmlBody);
 
@@ -271,4 +305,5 @@ namespace GoWork.Services.FeedbackService
             }
         }
     }
+
 }
