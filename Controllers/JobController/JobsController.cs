@@ -123,9 +123,12 @@ namespace GoWork.Controllers.JobController
         /// </summary>
         [HttpPost("enhance-description")]
         [Authorize(Roles = "Company")]
-        public async Task<ActionResult<ApiResponse<string>>> EnhanceDescription(EnhanceJobDescriptionDTO dto)
+        public async Task<ActionResult<ApiResponse<JobDescriptionEnhancementResultDTO>>> EnhanceDescription(EnhanceJobDescriptionDTO dto)
         {
             var response = await _jobService.EnhanceJobDescriptionAsync(dto);
+            if (response.StatusCode == 200)
+                return Ok(response);
+
             return StatusCode(response.StatusCode, response);
         }
 

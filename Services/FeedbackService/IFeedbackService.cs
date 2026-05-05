@@ -12,5 +12,6 @@ namespace GoWork.Services.FeedbackService
         Task<ApiResponse<List<LookUpDTO>>> GetFeedbackTypesAsync();
         Task<ApiResponse<ConfirmationResponseDTO>> MarkAsReadAsync(int feedbackId);
         Task<ApiResponse<ConfirmationResponseDTO>> DeleteFeedbackAsync(int feedbackId);
+        Task<ApiResponse<ConfirmationResponseDTO>> SendEmailReplyAsync(SendEmailRequestDTO dto);
     }
 }

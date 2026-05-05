@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
 using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
+using Application = GoWork.Models.Application;
 
 namespace GoWork.Services.JobService
 {
@@ -503,12 +505,77 @@ namespace GoWork.Services.JobService
         }
 
 
-        public async Task<ApiResponse<string>> EnhanceJobDescriptionAsync(EnhanceJobDescriptionDTO dto)
+        //public async Task<ApiResponse<string>> EnhanceJobDescriptionAsync(EnhanceJobDescriptionDTO dto)
+        //{
+        //    var apiKey = _configuration["OpenAI:ApiKey"];
+        //    if (string.IsNullOrWhiteSpace(apiKey))
+        //    {
+        //        return new ApiResponse<string>(500, "AI Service is not configured. Please contact support.");
+        //    }
+
+        //    try
+        //    {
+        //        var modelName = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+        //        var chatClient = new ChatClient(modelName, apiKey);
+
+        //        //var prompt = $@"
+        //        //You are a professional HR and Technical Recruiter. Your goal is to take a draft job title and description and transform them into a high-quality, professional, and engaging job posting. 
+
+        //        //Instructions:
+        //        //1. Improve the structure and flow of the content.
+        //        //2. Use professional and persuasive language to attract top talent.
+        //        //3. Organize the information into clear sections such as 'About the Role', 'Responsibilities', and 'Requirements'.
+        //        //4. Ensure the tone is appropriate for a modern workplace.
+        //        //5. Do NOT change the core meaning or the essential requirements of the job.
+        //        //6. Return ONLY the enhanced description text, without any additional comments, markdown headers like '###', or conversational filler.
+        //        //7. If the input is in Arabic, respond in Arabic. If English, respond in English.
+
+        //        //Job Title: {dto.Title}
+        //        //Original Description: {dto.Description}";
+
+        //        var messages = new List<ChatMessage>
+        //        {
+        //            new SystemChatMessage("You are a professional HR and Technical Recruiter. Your task is to enhance job descriptions to be more professional, engaging, and structured. Use clear sections like 'About the Role', 'Responsibilities', and 'Requirements'. Do not include markdown headers like '###' or any conversational filler. Return ONLY the enhanced description. Respond in the same language as the input (Arabic or English)."),
+        //            new UserChatMessage($"Job Title: {dto.Title}\n\nDraft Description:\n{dto.Description}")
+        //        };
+
+        //        var options = new ChatCompletionOptions
+        //        {
+        //            Temperature = 0.3f,
+        //        };
+
+        //        //var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
+        //        //var enhancedDescription = completion.Value.Content[0].Text?.Trim();
+
+        //        var completion = await chatClient.CompleteChatAsync(messages, options);
+
+        //        // Get the first content part that is text
+        //        var enhancedDescription = completion.Value.Content.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c.Text))?.Text?.Trim();
+
+
+        //        if (string.IsNullOrWhiteSpace(enhancedDescription))
+        //        {
+        //            return new ApiResponse<string>(500, "AI failed to generate an enhanced description.");
+        //        }
+
+        //        return new ApiResponse<string>(200, enhancedDescription);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"AI Enhancement Failed: {ex.Message}");
+        //        return new ApiResponse<string>(500, "An error occurred while communicating with the AI service.");
+        //    }
+        //}
+
+
+        // ==================== Job Applications ====================
+
+        public async Task<ApiResponse<JobDescriptionEnhancementResultDTO>> EnhanceJobDescriptionAsync(EnhanceJobDescriptionDTO dto)
         {
             var apiKey = _configuration["OpenAI:ApiKey"];
             if (string.IsNullOrWhiteSpace(apiKey))
             {
-                return new ApiResponse<string>(500, "AI Service is not configured. Please contact support.");
+                return new ApiResponse<JobDescriptionEnhancementResultDTO>(500, "AI Service is not configured. Please contact support.");
             }
 
             try
@@ -517,7 +584,7 @@ namespace GoWork.Services.JobService
                 var chatClient = new ChatClient(modelName, apiKey);
 
                 var prompt = $@"
-                You are a professional HR and Technical Recruiter. Your goal is to take a draft job title and description and transform them into a high-quality, professional, and engaging job posting. 
+                You are a professional HR and Technical Recruiter. Your task is to take a draft job title and description and transform them into a high-quality, professional, and engaging job posting. 
 
                 Instructions:
                 1. Improve the structure and flow of the content.
@@ -525,36 +592,50 @@ namespace GoWork.Services.JobService
                 3. Organize the information into clear sections such as 'About the Role', 'Responsibilities', and 'Requirements'.
                 4. Ensure the tone is appropriate for a modern workplace.
                 5. Do NOT change the core meaning or the essential requirements of the job.
-                6. Return ONLY the enhanced description text, without any additional comments, markdown headers like '###', or conversational filler.
-                7. If the input is in Arabic, respond in Arabic. If English, respond in English.
+                6. If the input is in Arabic, respond in Arabic. If English, respond in English.
+                7. CRITICAL: The total length of the enhanced description MUST be under 700 characters to fit the system's constraints.
+
+                Return ONLY a valid JSON object in this exact format:
+                {{
+                  ""enhanced_description"": ""your_enhanced_text_here""
+                }}
+
+                Do not include any explanations, markdown formatting, or text outside the JSON.
 
                 Job Title: {dto.Title}
                 Original Description: {dto.Description}";
 
+                
+
                 var options = new ChatCompletionOptions
                 {
                     Temperature = 0.3f,
+                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
                 };
 
                 var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
-                var enhancedDescription = completion.Value.Content[0].Text?.Trim();
 
-                if (string.IsNullOrWhiteSpace(enhancedDescription))
+                if (completion == null || completion.Value == null || completion.Value.Content == null || completion.Value.Content.Count == 0)
                 {
-                    return new ApiResponse<string>(500, "AI failed to generate an enhanced description.");
+                    return new ApiResponse<JobDescriptionEnhancementResultDTO>(500, "AI failed to generate an enhanced description.");
                 }
 
-                return new ApiResponse<string>(200, enhancedDescription);
+                var aiContent = completion.Value.Content[0].Text;
+                var resultDto = JsonSerializer.Deserialize<JobDescriptionEnhancementResultDTO>(aiContent);
+                
+                if (resultDto == null || string.IsNullOrWhiteSpace(resultDto.EnhancedDescription))
+                {
+                    return new ApiResponse<JobDescriptionEnhancementResultDTO>(500, "AI returned an empty response.");
+                }
+
+                return new ApiResponse<JobDescriptionEnhancementResultDTO>(200, resultDto);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"AI Enhancement Failed: {ex.Message}");
-                return new ApiResponse<string>(500, "An error occurred while communicating with the AI service.");
+                return new ApiResponse<JobDescriptionEnhancementResultDTO>(500, "An error occurred while communicating with the AI service.");
             }
         }
-
-
-        // ==================== Job Applications ====================
 
         public async Task<ApiResponse<ApplicationResultDto>> ApplyToJobAsync(int jobId, int seekerId)
         {
