@@ -20,7 +20,8 @@ namespace GoWork.Services.JobService
 
         Task<ApiResponse<ConfirmationResponseDTO>> DeleteJobAsync(int employerId, int id);
 
-        Task<ApiResponse<string>> EnhanceJobDescriptionAsync(EnhanceJobDescriptionDTO dto);
+        Task<ApiResponse<JobDescriptionEnhancementResultDTO>> EnhanceJobDescriptionAsync(EnhanceJobDescriptionDTO dto);
+
         Task<ApiResponse<JobRecommendationResultDto>> GetJobRecommendationsAsync(int seekerId);
 
         Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request);

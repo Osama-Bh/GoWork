@@ -40,7 +40,7 @@ namespace GoWork.Controllers.Dashboard
             return Ok(response);
         }
 
-        [HttpGet]
+        [HttpGet("CandidateInterviews")]
         [Authorize(Roles = "Candidate, Admin")]
         public async Task<ActionResult<ApiResponse<InterviewResponseDTO>>> GetCandidateInterviews([FromQuery] InterviewRequestDTO requestDTO)
         {

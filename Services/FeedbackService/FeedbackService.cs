@@ -4,6 +4,7 @@ using GoWork.DTOs;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.DTOs.FeedbackDTOs;
 using GoWork.Models;
+using GoWork.Services.EmailService;
 using GoWork.Services.FileService;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,12 @@ namespace GoWork.Services.FeedbackService
     {
         private readonly ApplicationDbContext _context;
         private readonly IFileService _fileService;
-        public FeedbackService(ApplicationDbContext context, IFileService fileService)
+        private readonly IEmailService _emailService;
+        public FeedbackService(ApplicationDbContext context, IFileService fileService,IEmailService emailService)
         {
             _context = context;
             _fileService = fileService;
+            _emailService = emailService;
         }
 
         public async Task<ApiResponse<ConfirmationResponseDTO>> SubmitFeedbackAsync(int userId, SubmitFeedbackDTO dto)
@@ -214,6 +217,58 @@ namespace GoWork.Services.FeedbackService
 
             return new ApiResponse<ConfirmationResponseDTO>(200,
                 new ConfirmationResponseDTO { Message = "Feedback deleted successfully." });
+        }
+
+        public async Task<ApiResponse<ConfirmationResponseDTO>> SendEmailReplyAsync(SendEmailRequestDTO dto)
+        {
+            try
+            {
+                var defaultSubject = "Response to your Feedback - GoWork";
+                //await _emailService.SendEmailAsync(dto.Email, defaultSubject, dto.Message);
+
+                var htmlBody = $@"
+                <div style=""font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"">
+                    <div style=""background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 30px; text-align: center;"">
+                        <h1 style=""color: white; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;"">GoWork</h1>
+                    </div>
+                    <div style=""padding: 40px; background-color: #ffffff;"">
+                        <h2 style=""color: #1f2937; margin-top: 0; font-size: 22px; font-weight: 600;"">Hello!</h2>
+                        <p style=""color: #4b5563; line-height: 1.6; font-size: 16px;"">
+                            Thank you for reaching out to us. We have carefully reviewed your feedback and here is our response:
+                        </p>
+                        <div style=""background-color: #f9fafb; border-left: 4px solid #6366f1; padding: 25px; margin: 30px 0; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"">
+                            <p style=""color: #374151; font-size: 16px; margin: 0; line-height: 1.7; white-space: pre-wrap;"">
+                                {dto.Message}
+                            </p>
+                        </div>
+                        <p style=""color: #4b5563; line-height: 1.6; font-size: 16px;"">
+                            We value your input and are committed to improving our services based on your suggestions. If you have any further questions or need additional assistance, please don't hesitate to contact us.
+                        </p>
+                        <div style=""margin-top: 40px; padding-top: 25px; border-top: 1px solid #f3f4f6; text-align: center;"">
+                            <p style=""color: #9ca3af; font-size: 14px; margin: 0;"">Best Regards,</p>
+                            <p style=""color: #6366f1; font-weight: 700; font-size: 18px; margin: 8px 0;"">The GoWork Team</p>
+                        </div>
+                    </div>
+                    <div style=""background-color: #f9fafb; padding: 25px; text-align: center; border-top: 1px solid #f3f4f6;"">
+                        <p style=""color: #9ca3af; font-size: 13px; margin: 0;"">
+                            &copy; 2026 GoWork Inc. Building the future of work.
+                        </p>
+                        <div style=""margin-top: 10px;"">
+                            <a href=""#"" style=""color: #6366f1; text-decoration: none; font-size: 13px; margin: 0 10px;"">Privacy Policy</a>
+                            <a href=""#"" style=""color: #6366f1; text-decoration: none; font-size: 13px; margin: 0 10px;"">Support</a>
+                        </div>
+                    </div>
+                </div>";
+
+                await _emailService.SendEmailAsync(dto.Email, defaultSubject, htmlBody);
+
+                return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Email sent successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Email sending failed: {ex.Message}");
+                return new ApiResponse<ConfirmationResponseDTO>(500, new ConfirmationResponseDTO { Message = "Failed to send email." });
+            }
         }
     }
 }

@@ -96,5 +96,24 @@ namespace GoWork.Controllers.Dashboard
 
             return Ok(response);
         }
+
+        /// <summary>
+        /// Send an email reply to a user (Admin only).
+        /// </summary>
+        [HttpPost("send-reply")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> SendReply(
+            [FromBody] SendEmailRequestDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<ConfirmationResponseDTO>(400, "Invalid request data."));
+
+            var response = await _feedbackService.SendEmailReplyAsync(dto);
+
+            if (response.StatusCode != 200)
+                return StatusCode(response.StatusCode, response);
+
+            return Ok(response);
+        }
     }
 }
