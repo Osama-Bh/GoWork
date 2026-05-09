@@ -637,10 +637,71 @@ namespace GoWork.Services.JobService
             }
         }
 
+        private async Task<int> CalculateMatchScoreAsync(Seeker seeker, Job job)
+        {
+            var apiKey = _configuration["OpenAI:ApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey)) return 10; // Default to pass if AI not configured
+
+            try
+            {
+                var candidateProfile = new
+                {
+                    skills = seeker.SeekerSkills?.Select(ss => ss.Skill.Name).ToList() ?? new List<string>(),
+                    major = seeker.Major ?? "Not specified"
+                };
+
+                var jobRequirements = new
+                {
+                    title = job.Title,
+                    description = job.Description,
+                    required_skills = job.JobSkills?.Select(js => js.Skill.Name).ToList() ?? new List<string>()
+                };
+
+                var prompt = $@"
+                You are an expert AI recruiter. Evaluate the matching between the candidate and the job requirements.
+                Candidate Data: {JsonSerializer.Serialize(candidateProfile)}
+                Job Data: {JsonSerializer.Serialize(jobRequirements)}
+
+                Instructions:
+                1. Provide a match score from 1 to 10 (integer).
+                2. Return ONLY a valid JSON object with a 'score' field, without any explanations or additional text, in this exact format:
+                {{ ""score"": 7 }}
+                3. Do not include any explanations, markdown formatting, or text outside the JSON.";
+                
+                var modelName = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+                var chatClient = new ChatClient(modelName, apiKey);
+
+                var options = new ChatCompletionOptions
+                {
+                    Temperature = 0.2f,
+                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+                };
+
+                var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
+                var aiContent = completion.Value.Content[0].Text;
+
+                using var doc = JsonDocument.Parse(aiContent);
+                if (doc.RootElement.TryGetProperty("score", out var scoreElement))
+                {
+                    return scoreElement.GetInt32();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AI Matching Failed: {ex.Message}");
+            }
+
+            return 10; // Fallback to pass to avoid blocking users on technical errors
+        }
+
         public async Task<ApiResponse<ApplicationResultDto>> ApplyToJobAsync(int jobId, int seekerId)
         {
-            var job = await _context.TbJobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId);
-            
+            //var job = await _context.TbJobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId);
+
+            var job = await _context.TbJobs
+                .Include(j => j.JobSkills).ThenInclude(js => js.Skill)
+                .FirstOrDefaultAsync(j => j.Id == jobId);
+
             if (job == null)
             {
                 return new ApiResponse<ApplicationResultDto>(404, "Job not found.");
@@ -651,8 +712,17 @@ namespace GoWork.Services.JobService
                 return new ApiResponse<ApplicationResultDto>(400, "Job is closed or expired.");
             }
 
-            var seekerExists = await _context.TbSeekers.AnyAsync(s => s.Id == seekerId);
-            if (!seekerExists)
+            //var seekerExists = await _context.TbSeekers.AnyAsync(s => s.Id == seekerId);
+            //if (!seekerExists)
+            //{
+            //    return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
+            //}
+
+            var seeker = await _context.TbSeekers
+               .Include(s => s.SeekerSkills).ThenInclude(ss => ss.Skill)
+               .FirstOrDefaultAsync(s => s.Id == seekerId);
+
+            if (seeker == null)
             {
                 return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
             }
@@ -663,12 +733,23 @@ namespace GoWork.Services.JobService
                 return new ApiResponse<ApplicationResultDto>(400, "You have already applied for this job.");
             }
 
+            var score = await CalculateMatchScoreAsync(seeker, job);
+            var statusId = (int)ApplicationStatusEnum.PendingReview;
+            var message = "Application submitted successfully.";
+
+            if (score < 5)
+            {
+                statusId = (int)ApplicationStatusEnum.Rejected;
+                message = "Application submitted, but did not meet the matching criteria for this role.";
+            }
+
             var application = new Application
             {
                 JobId = jobId,
                 SeekerId = seekerId,
                 ApplicationDate = DateTime.UtcNow,
-                ApplicationStatusId = (int)ApplicationStatusEnum.PendingReview
+                //ApplicationStatusId = (int)ApplicationStatusEnum.PendingReview
+                ApplicationStatusId = statusId
             };
 
             _context.TbApplications.Add(application);
@@ -677,7 +758,8 @@ namespace GoWork.Services.JobService
             var result = new ApplicationResultDto
             {
                 ApplicationId = application.Id,
-                Message = "Application submitted successfully."
+                //Message = "Application submitted successfully."
+                Message = message
             };
 
             return new ApiResponse<ApplicationResultDto>(200, result);
