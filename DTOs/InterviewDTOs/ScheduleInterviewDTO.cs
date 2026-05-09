@@ -1,4 +1,6 @@
-﻿namespace GoWork.DTOs.InterviewDTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace GoWork.DTOs.InterviewDTOs
 {
     public class ScheduleInterviewDTO
     {

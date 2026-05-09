@@ -637,70 +637,132 @@ namespace GoWork.Services.JobService
             }
         }
 
-        private async Task<int> CalculateMatchScoreAsync(Seeker seeker, Job job)
-        {
-            var apiKey = _configuration["OpenAI:ApiKey"];
-            if (string.IsNullOrWhiteSpace(apiKey)) return 10; // Default to pass if AI not configured
+        //private async Task<int> CalculateMatchScoreAsync(Seeker seeker, Job job)
+        //{
+        //    var apiKey = _configuration["OpenAI:ApiKey"];
+        //    if (string.IsNullOrWhiteSpace(apiKey)) return 10; // Default to pass if AI not configured
 
+        //    try
+        //    {
+        //        var candidateProfile = new
+        //        {
+        //            skills = seeker.SeekerSkills?.Select(ss => ss.Skill.Name).ToList() ?? new List<string>(),
+        //            major = seeker.Major ?? "Not specified"
+        //        };
+
+        //        var jobRequirements = new
+        //        {
+        //            title = job.Title,
+        //            description = job.Description,
+        //            required_skills = job.JobSkills?.Select(js => js.Skill.Name).ToList() ?? new List<string>()
+        //        };
+
+        //        var prompt = $@"
+        //        You are an expert AI recruiter. Evaluate the matching between the candidate and the job requirements.
+        //        Candidate Data: {JsonSerializer.Serialize(candidateProfile)}
+        //        Job Data: {JsonSerializer.Serialize(jobRequirements)}
+
+        //        Instructions:
+        //        1. Provide a match score from 1 to 10 (integer).
+        //        2. Return ONLY a valid JSON object with a 'score' field, without any explanations or additional text, in this exact format:
+        //        {{ ""score"": 7 }}
+        //        3. Do not include any explanations, markdown formatting, or text outside the JSON.";
+
+        //        var modelName = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+        //        var chatClient = new ChatClient(modelName, apiKey);
+
+        //        var options = new ChatCompletionOptions
+        //        {
+        //            Temperature = 0.2f,
+        //            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+        //        };
+
+        //        var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
+        //        var aiContent = completion.Value.Content[0].Text;
+
+        //        using var doc = JsonDocument.Parse(aiContent);
+        //        if (doc.RootElement.TryGetProperty("score", out var scoreElement))
+        //        {
+        //            return scoreElement.GetInt32();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"AI Matching Failed: {ex.Message}");
+        //    }
+
+        //    return 10; // Fallback to pass to avoid blocking users on technical errors
+        //}
+
+
+        private async Task<int?> CalculateMatchingPercentageAsync(int seekerId, int jobId)
+        {
             try
             {
-                var candidateProfile = new
-                {
-                    skills = seeker.SeekerSkills?.Select(ss => ss.Skill.Name).ToList() ?? new List<string>(),
-                    major = seeker.Major ?? "Not specified"
-                };
+                var seeker = await _context.TbSeekers
+                    .Include(s => s.SeekerSkills).ThenInclude(ss => ss.Skill)
+                    .FirstOrDefaultAsync(s => s.Id == seekerId);
 
-                var jobRequirements = new
-                {
-                    title = job.Title,
-                    description = job.Description,
-                    required_skills = job.JobSkills?.Select(js => js.Skill.Name).ToList() ?? new List<string>()
-                };
+                var job = await _context.TbJobs
+                    .Include(j => j.JobSkills).ThenInclude(js => js.Skill)
+                    .FirstOrDefaultAsync(j => j.Id == jobId);
 
-                var prompt = $@"
-                You are an expert AI recruiter. Evaluate the matching between the candidate and the job requirements.
-                Candidate Data: {JsonSerializer.Serialize(candidateProfile)}
-                Job Data: {JsonSerializer.Serialize(jobRequirements)}
+                if (seeker == null || job == null) return null;
 
-                Instructions:
-                1. Provide a match score from 1 to 10 (integer).
-                2. Return ONLY a valid JSON object with a 'score' field, without any explanations or additional text, in this exact format:
-                {{ ""score"": 7 }}
-                3. Do not include any explanations, markdown formatting, or text outside the JSON.";
-                
+                var seekerSkills = string.Join(", ", seeker.SeekerSkills.Select(s => s.Skill.Name));
+                var jobSkills = string.Join(", ", job.JobSkills.Select(s => s.Skill.Name));
+
+                var apiKey = _configuration["OpenAI:ApiKey"];
+                if (string.IsNullOrWhiteSpace(apiKey)) return null;
+
                 var modelName = _configuration["OpenAI:Model"] ?? "gpt-4o-mini";
                 var chatClient = new ChatClient(modelName, apiKey);
 
-                var options = new ChatCompletionOptions
-                {
-                    Temperature = 0.2f,
-                    ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
-                };
+                var prompt = $@"
+                    You are an expert technical recruiter. Your task is to calculate a match percentage between a candidate and a job posting.
+                    
+                    Candidate Profile:
+                    - Major: {seeker.Major}
+                    - Skills: {seekerSkills}
+                    
+                    Job Requirements:
+                    - Title: {job.Title}
+                    - Description: {job.Description}
+                    - Required Skills: {jobSkills}
+                    
+                    Instructions:
+                    1. Analyze how well the candidate's skills and major align with the job description and requirements.
+                    2. Return ONLY a single integer between 0 and 100.
+                    3. Do not include any text, symbols, or explanations.
+                    4. Return ONLY a valid JSON object with a 'Percentage' field, without any explanations or additional text, in this exact format:
+                {{{{ """"Percentage"""": 70 }}}}
+                    5. Do not include any explanations, markdown formatting, or text outside the JSON."";
+                ";
 
-                var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new SystemChatMessage(prompt) }, options);
-                var aiContent = completion.Value.Content[0].Text;
+                var options = new ChatCompletionOptions { Temperature = 0.1f };
+                var completion = await chatClient.CompleteChatAsync(new ChatMessage[] { new UserChatMessage(prompt) }, options);
+                var aiResponse = completion.Value.Content[0].Text?.Trim();
 
-                using var doc = JsonDocument.Parse(aiContent);
-                if (doc.RootElement.TryGetProperty("score", out var scoreElement))
+                if (int.TryParse(aiResponse, out int percentage))
                 {
-                    return scoreElement.GetInt32();
+                    return percentage;
                 }
+
+                return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"AI Matching Failed: {ex.Message}");
+                return 500; // Return a larger value to avoid false negatives in matching if AI fails, since this is a non-critical enhancement
             }
-
-            return 10; // Fallback to pass to avoid blocking users on technical errors
         }
 
         public async Task<ApiResponse<ApplicationResultDto>> ApplyToJobAsync(int jobId, int seekerId)
         {
-            //var job = await _context.TbJobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId);
+            var job = await _context.TbJobs.AsNoTracking().FirstOrDefaultAsync(j => j.Id == jobId);
 
-            var job = await _context.TbJobs
-                .Include(j => j.JobSkills).ThenInclude(js => js.Skill)
-                .FirstOrDefaultAsync(j => j.Id == jobId);
+            //var job = await _context.TbJobs
+            //    .Include(j => j.JobSkills).ThenInclude(js => js.Skill)
+            //    .FirstOrDefaultAsync(j => j.Id == jobId);
 
             if (job == null)
             {
@@ -712,20 +774,20 @@ namespace GoWork.Services.JobService
                 return new ApiResponse<ApplicationResultDto>(400, "Job is closed or expired.");
             }
 
-            //var seekerExists = await _context.TbSeekers.AnyAsync(s => s.Id == seekerId);
-            //if (!seekerExists)
-            //{
-            //    return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
-            //}
-
-            var seeker = await _context.TbSeekers
-               .Include(s => s.SeekerSkills).ThenInclude(ss => ss.Skill)
-               .FirstOrDefaultAsync(s => s.Id == seekerId);
-
-            if (seeker == null)
+            var seekerExists = await _context.TbSeekers.AnyAsync(s => s.Id == seekerId);
+            if (!seekerExists)
             {
                 return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
             }
+
+            //var seeker = await _context.TbSeekers
+            //   .Include(s => s.SeekerSkills).ThenInclude(ss => ss.Skill)
+            //   .FirstOrDefaultAsync(s => s.Id == seekerId);
+
+            //if (seeker == null)
+            //{
+            //    return new ApiResponse<ApplicationResultDto>(404, "Candidate not found.");
+            //}
 
             var alreadyApplied = await _context.TbApplications.AnyAsync(a => a.JobId == jobId && a.SeekerId == seekerId);
             if (alreadyApplied)
@@ -733,23 +795,24 @@ namespace GoWork.Services.JobService
                 return new ApiResponse<ApplicationResultDto>(400, "You have already applied for this job.");
             }
 
-            var score = await CalculateMatchScoreAsync(seeker, job);
-            var statusId = (int)ApplicationStatusEnum.PendingReview;
-            var message = "Application submitted successfully.";
+            //var score = await CalculateMatchScoreAsync(seeker, job);
+            //var statusId = (int)ApplicationStatusEnum.PendingReview;
+            //var message = "Application submitted successfully.";
 
-            if (score < 5)
-            {
-                statusId = (int)ApplicationStatusEnum.Rejected;
-                message = "Application submitted, but did not meet the matching criteria for this role.";
-            }
+            //if (score < 5)
+            //{
+            //    statusId = (int)ApplicationStatusEnum.Rejected;
+            //    message = "Application submitted, but did not meet the matching criteria for this role.";
+            //}
 
             var application = new Application
             {
                 JobId = jobId,
                 SeekerId = seekerId,
                 ApplicationDate = DateTime.UtcNow,
-                //ApplicationStatusId = (int)ApplicationStatusEnum.PendingReview
-                ApplicationStatusId = statusId
+                ApplicationStatusId = (int)ApplicationStatusEnum.PendingReview,
+                MatchingPercentage = await CalculateMatchingPercentageAsync(seekerId, jobId)
+                //ApplicationStatusId = statusId
             };
 
             _context.TbApplications.Add(application);
@@ -758,8 +821,8 @@ namespace GoWork.Services.JobService
             var result = new ApplicationResultDto
             {
                 ApplicationId = application.Id,
-                //Message = "Application submitted successfully."
-                Message = message
+                Message = "Application submitted successfully."
+                //Message = message
             };
 
             return new ApiResponse<ApplicationResultDto>(200, result);

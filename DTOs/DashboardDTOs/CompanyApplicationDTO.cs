@@ -12,5 +12,6 @@
         public int StatusId { get; set; }
         public string StatusName { get; set; } = null!;
         public bool CanAction { get; set; }
+        public int? MatchingPercentage { get; set; }
     }
 }
