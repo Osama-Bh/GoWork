@@ -15,6 +15,7 @@ namespace GoWork.Models
         public DateTime ApplicationDate { get; set; }
         public int ApplicationStatusId { get; set; }
         public ApplicationStatus ApplicationStatus { get; set; }
+        public int? MatchingPercentage { get; set; }
         public ICollection<Interview>? Interviews { get; set; }
 
     }

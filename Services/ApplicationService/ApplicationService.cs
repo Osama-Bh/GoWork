@@ -253,7 +253,8 @@ namespace GoWork.Services.ApplicationService
                     CandidateDescription = a.Seeker.Major,
                     ResumeBlobUrl = a.Seeker.ResumeUrl,
                     StatusId = a.ApplicationStatusId,
-                    StatusName = a.ApplicationStatus.Name
+                    StatusName = a.ApplicationStatus.Name,
+                    MatchingPercentage = a.MatchingPercentage
                 })
                 .ToListAsync();
 
@@ -272,7 +273,8 @@ namespace GoWork.Services.ApplicationService
                         : _fileService.DownloadUrlAsync(a.ResumeBlobUrl).SasUrl,
                     StatusId = a.StatusId,
                     StatusName = a.StatusName,
-                    CanAction = a.StatusId == (int)ApplicationStatusEnum.PendingReview
+                    CanAction = a.StatusId == (int)ApplicationStatusEnum.PendingReview,
+                    MatchingPercentage = a.MatchingPercentage
                 })
                 .ToList();
 

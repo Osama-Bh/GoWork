@@ -356,7 +356,8 @@ namespace GoWork.Services.InterviewService
                     CandidateDescription = a.Seeker.Major ?? string.Empty,
                     StatusId = a.ApplicationStatusId,
                     StatusName = a.ApplicationStatus.Name,
-                    CanAction = true // Shortlisted candidates are actionable in the interview context
+                    CanAction = true ,// Shortlisted candidates are actionable in the interview context
+                    MatchingPercentage = a.MatchingPercentage
                 })
                 .ToListAsync();
 
