@@ -8,5 +8,6 @@ namespace GoWork.DTOs.InterviewDTOs
         public int Rescheduled { get; set; }
         public int Cancelled { get; set; }
         public int NoShow { get; set; }
+        public int MissingInterview { get; set; }
     }
 }
