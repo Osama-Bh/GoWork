@@ -434,26 +434,126 @@ namespace GoWork.Services.InterviewService
         }
 
 
+        //public async Task<ApiResponse<ConfirmationResponseDTO>> ScheduleInterviewAsync(int employerUserId, ScheduleInterviewDTO dto)
+        //{
+        //    var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+        //    if (employer == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Employer not found.");
+
+        //    var application = await _context.TbApplications
+        //        .Include(a => a.Job)
+        //        .FirstOrDefaultAsync(a => a.Id == dto.ApplicationId && a.Job.EmployerId == employer.Id);
+
+        //    if (application == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Application not found.");
+
+        //    // Create Address
+        //    var address = new Models.Address
+        //    {
+        //        AddressLine1 = dto.AddressLine1,
+        //        CountryId = dto.CountryId,
+        //        GovernateId = dto.GovernateId
+        //    };
+        //    _context.TbAddresses.Add(address);
+        //    await _context.SaveChangesAsync(); // Save to get AddressId
+
+        //    var interview = new Models.Interview
+        //    {
+        //        ApplicationId = dto.ApplicationId,
+        //        InterviewDate = dto.InterviewDate,
+        //        InterviewTypeId = dto.InterviewTypeId,
+        //        Notes = dto.Notes,
+        //        MeetingLink = dto.MeetingLink,
+        //        AddressId = address.Id,
+        //        InterviewStatusId = (int)InterviewStatusEnum.Scheduled
+        //    };
+
+        //    _context.TbInterviews.Add(interview);
+
+        //    // Optionally update application status to 'Interview' stage if that's desired
+        //    // application.ApplicationStatusId = (int)ApplicationStatusEnum.Interview;
+
+        //    await _context.SaveChangesAsync();
+
+        //    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Interview scheduled successfully." });
+        //}
+
+        //public async Task<ApiResponse<ConfirmationResponseDTO>> UpdateInterviewAsync(int employerUserId, int interviewId, ScheduleInterviewDTO dto)
+        //{
+        //    var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
+        //    if (employer == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Employer not found.");
+
+        //    var interview = await _context.TbInterviews
+        //        .Include(i => i.Application).ThenInclude(a => a.Job)
+        //        .Include(i => i.Address)
+        //        .FirstOrDefaultAsync(i => i.Id == interviewId && i.Application.Job.EmployerId == employer.Id);
+
+        //    if (interview == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Interview not found.");
+
+        //    interview.InterviewDate = dto.InterviewDate;
+        //    interview.InterviewTypeId = dto.InterviewTypeId;
+        //    interview.Notes = dto.Notes;
+        //    interview.MeetingLink = dto.MeetingLink;
+        //    interview.InterviewStatusId = (int)InterviewStatusEnum.Scheduled; // Maintain scheduled status (or set to Rescheduled)
+
+        //    if (interview.Address != null)
+        //    {
+        //        interview.Address.AddressLine1 = dto.AddressLine1;
+        //        interview.Address.CountryId = dto.CountryId;
+        //        interview.Address.GovernateId = dto.GovernateId;
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+        //    return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Interview updated successfully." });
+        //}
+
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> ScheduleInterviewAsync(int employerUserId, ScheduleInterviewDTO dto)
         {
             var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.UserId == employerUserId);
             if (employer == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Employer not found.");
 
             var application = await _context.TbApplications
-                .Include(a => a.Job)
+                .Include(a => a.Job).ThenInclude(j => j.Address)
                 .FirstOrDefaultAsync(a => a.Id == dto.ApplicationId && a.Job.EmployerId == employer.Id);
 
             if (application == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Application not found.");
 
-            // Create Address
-            var address = new Models.Address
+            // Validation of Foreign Keys
+            if (!await _context.TbInterviewTypes.AnyAsync(t => t.Id == dto.InterviewTypeId))
+                return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Interview Type ID: {dto.InterviewTypeId}");
+
+            Models.Address? address = null;
+            string? meetingLink = dto.MeetingLink;
+
+            if (dto.InterviewTypeId == (int)InterviewTypeEnum.Online)
             {
-                AddressLine1 = dto.AddressLine1,
-                CountryId = dto.CountryId,
-                GovernateId = dto.GovernateId
-            };
-            _context.TbAddresses.Add(address);
-            await _context.SaveChangesAsync(); // Save to get AddressId
+                if (string.IsNullOrWhiteSpace(meetingLink))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "Meeting link is required for Online interviews.");
+            }
+            else
+            {
+                // Physical Interview: Use Job's Location but allow custom Address Line
+                if (string.IsNullOrWhiteSpace(dto.AddressLine1))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "Address Line is required for physical interviews.");
+
+                int countryId = dto.CountryId ?? application.Job.Address.CountryId;
+                int governateId = dto.GovernateId ?? application.Job.Address.GovernateId;
+
+                // Validate IDs if they were provided manually
+                if (!await _context.TbCountries.AnyAsync(c => c.Id == countryId))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Country ID: {countryId}");
+
+                if (!await _context.TbGovernates.AnyAsync(g => g.Id == governateId))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Governate ID: {governateId}");
+
+                address = new Models.Address
+                {
+                    AddressLine1 = dto.AddressLine1,
+                    CountryId = countryId,
+                    GovernateId = governateId
+                };
+                meetingLink = null; // Ensure meeting link is null for physical
+            }
 
             var interview = new Models.Interview
             {
@@ -461,16 +561,12 @@ namespace GoWork.Services.InterviewService
                 InterviewDate = dto.InterviewDate,
                 InterviewTypeId = dto.InterviewTypeId,
                 Notes = dto.Notes,
-                MeetingLink = dto.MeetingLink,
-                AddressId = address.Id,
+                MeetingLink = meetingLink,
+                Address = address,
                 InterviewStatusId = (int)InterviewStatusEnum.Scheduled
             };
 
             _context.TbInterviews.Add(interview);
-
-            // Optionally update application status to 'Interview' stage if that's desired
-            // application.ApplicationStatusId = (int)ApplicationStatusEnum.Interview;
-
             await _context.SaveChangesAsync();
 
             return new ApiResponse<ConfirmationResponseDTO>(200, new ConfirmationResponseDTO { Message = "Interview scheduled successfully." });
@@ -482,23 +578,60 @@ namespace GoWork.Services.InterviewService
             if (employer == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Employer not found.");
 
             var interview = await _context.TbInterviews
-                .Include(i => i.Application).ThenInclude(a => a.Job)
+                .Include(i => i.Application).ThenInclude(a => a.Job).ThenInclude(j => j.Address)
                 .Include(i => i.Address)
                 .FirstOrDefaultAsync(i => i.Id == interviewId && i.Application.Job.EmployerId == employer.Id);
 
             if (interview == null) return new ApiResponse<ConfirmationResponseDTO>(404, "Interview not found.");
 
+            // Validation of Foreign Keys
+            if (!await _context.TbInterviewTypes.AnyAsync(t => t.Id == dto.InterviewTypeId))
+                return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Interview Type ID: {dto.InterviewTypeId}");
+
             interview.InterviewDate = dto.InterviewDate;
             interview.InterviewTypeId = dto.InterviewTypeId;
             interview.Notes = dto.Notes;
-            interview.MeetingLink = dto.MeetingLink;
-            interview.InterviewStatusId = (int)InterviewStatusEnum.Scheduled; // Maintain scheduled status (or set to Rescheduled)
+            interview.InterviewStatusId = (int)InterviewStatusEnum.Scheduled;
 
-            if (interview.Address != null)
+            if (dto.InterviewTypeId == (int)InterviewTypeEnum.Online)
             {
-                interview.Address.AddressLine1 = dto.AddressLine1;
-                interview.Address.CountryId = dto.CountryId;
-                interview.Address.GovernateId = dto.GovernateId;
+                if (string.IsNullOrWhiteSpace(dto.MeetingLink))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "Meeting link is required for Online interviews.");
+
+                interview.MeetingLink = dto.MeetingLink;
+                interview.Address = null; // Remove physical address if changed to online
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(dto.AddressLine1))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, "Address Line is required for physical interviews.");
+
+                int countryId = dto.CountryId ?? interview.Application.Job.Address.CountryId;
+                int governateId = dto.GovernateId ?? interview.Application.Job.Address.GovernateId;
+
+                // Validate IDs if they were provided manually
+                if (!await _context.TbCountries.AnyAsync(c => c.Id == countryId))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Country ID: {countryId}");
+
+                if (!await _context.TbGovernates.AnyAsync(g => g.Id == governateId))
+                    return new ApiResponse<ConfirmationResponseDTO>(400, $"Invalid Governate ID: {governateId}");
+
+                if (interview.Address != null)
+                {
+                    interview.Address.AddressLine1 = dto.AddressLine1;
+                    interview.Address.CountryId = countryId;
+                    interview.Address.GovernateId = governateId;
+                }
+                else
+                {
+                    interview.Address = new Models.Address
+                    {
+                        AddressLine1 = dto.AddressLine1,
+                        CountryId = countryId,
+                        GovernateId = governateId
+                    };
+                }
+                interview.MeetingLink = null;
             }
 
             await _context.SaveChangesAsync();
