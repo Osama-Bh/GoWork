@@ -19,14 +19,11 @@ namespace GoWork.DTOs.InterviewDTOs
         [MaxLength(500)]
         public string? MeetingLink { get; set; }
 
-        [Required]
         [MaxLength(200)]
-        public string AddressLine1 { get; set; } = null!;
+        public string? AddressLine1 { get; set; }
 
-        [Required]
-        public int CountryId { get; set; }
+        public int? CountryId { get; set; }
 
-        [Required]
-        public int GovernateId { get; set; }
+        public int? GovernateId { get; set; }
     }
 }
