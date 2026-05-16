@@ -1,4 +1,5 @@
 using ECommerceApp.DTOs;
+using GoWork.Authorization.Operations;
 using GoWork.Data;
 using GoWork.DTOs;
 using GoWork.DTOs.ApplicationDTOs;
@@ -6,7 +7,9 @@ using GoWork.DTOs.CompanyApplicationDTOs;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.Enums;
 using GoWork.Models;
+using GoWork.Services.CurrentUserService;
 using GoWork.Services.FileService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace GoWork.Services.ApplicationService
@@ -15,11 +18,16 @@ namespace GoWork.Services.ApplicationService
     {
         private readonly ApplicationDbContext _context;
         private readonly IFileService _fileService;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IAuthorizationService _authorizationService;
 
-        public ApplicationService(ApplicationDbContext context, IFileService fileService)
+
+        public ApplicationService(ApplicationDbContext context, IFileService fileService, ICurrentUserService currentUserService, IAuthorizationService authorizationService)
         {
             _context = context;
             _fileService = fileService;
+            _currentUserService = currentUserService;
+            _authorizationService = authorizationService;
         }
 
         public async Task<ApiResponse<List<LookUpDTO>>> GetApplicationStatuses()
@@ -113,11 +121,20 @@ namespace GoWork.Services.ApplicationService
             if (seeker == null)
                 return new ApiResponse<ConfirmationResponseDTO>(404, "seeker not found");
 
+            //var application = await _context.TbApplications
+            //    .FirstOrDefaultAsync(a => a.Id == applicationId && a.SeekerId == seeker.Id);
+
             var application = await _context.TbApplications
-                .FirstOrDefaultAsync(a => a.Id == applicationId && a.SeekerId == seeker.Id);
+                .FirstOrDefaultAsync(a => a.Id == applicationId);
 
             if (application == null)
                 return new ApiResponse<ConfirmationResponseDTO>(404, "Application not found.");
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(_currentUserService.User, application, 
+                ApplicationOperations.Withdraw);
+
+            if (!authorizationResult.Succeeded)
+                return new ApiResponse<ConfirmationResponseDTO>(403, "You are not authorized to withdraw this application.");
 
             if (application.ApplicationStatusId != (int)ApplicationStatusEnum.PendingReview)
                 return new ApiResponse<ConfirmationResponseDTO>(400, "Only applications under pending review can be withdrawn.");
