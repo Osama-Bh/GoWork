@@ -182,6 +182,10 @@ namespace GoWork.Services.InterviewService
                     InterviewDate = i.InterviewDate,
                     InterviewType = i.InterviewType.Name,
                     InterviewStatus = i.InterviewStatus.Name,
+                    CountryId = i.Address.CountryId,
+                    GovernateId = i.Address.GovernateId,
+                    AddressLine = i.Address.AddressLine1,
+                    AddressId = i.AddressId,
                     // Location: InPerson → address string, Online → meeting link
                     Location = i.InterviewTypeId == (int)InterviewTypeEnum.InPerson
                         ? (i.Address != null
@@ -238,7 +242,7 @@ namespace GoWork.Services.InterviewService
             //.ToListAsync();
 
             var statuses = await _context.TbInterviewStatuses
-            .Where(s=> s.IsActive)
+            .Where(s => s.IsActive)
             .OrderBy(s => s.SortOrder)
             .Select(s => new LookUpDTO { Id = s.Id, Name = s.Name })
             .ToListAsync();
@@ -344,21 +348,25 @@ namespace GoWork.Services.InterviewService
             if (dto.InterviewTypeId == (int)InterviewTypeEnum.Online)
             {
                 interview.MeetingLink = dto.MeetingLink;
+                interview.AddressId = null; // Clear address for online interview
+                var currentAddress = await _context.TbAddresses.FindAsync(interview.AddressId);
+                if (currentAddress != null)
+                {
+                    _context.TbAddresses.Remove(currentAddress);
+                }
             }
             else if (dto.InterviewTypeId == (int)InterviewTypeEnum.InPerson)
             {
                 interview.MeetingLink = null;
 
-                // Create new address for the rescheduled interview
-                var address = new Address
+                var CurrentAddress = _context.TbAddresses.Find(dto.AddressId);
+
+                if (CurrentAddress != null)
                 {
-                    CountryId = dto.CountryId!.Value,
-                    GovernateId = dto.GovernateId!.Value,
-                    AddressLine1 = dto.AddressLine!
-                };
-                _context.TbAddresses.Add(address);
-                await _context.SaveChangesAsync();
-                interview.AddressId = address.Id;
+                    CurrentAddress.CountryId = dto.CountryId.Value;
+                    CurrentAddress.GovernateId = dto.GovernateId.Value;
+                    CurrentAddress.AddressLine1 = dto.AddressLine;
+                }
             }
             else
             {

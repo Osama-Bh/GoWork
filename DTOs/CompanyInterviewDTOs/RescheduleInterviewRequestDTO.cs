@@ -21,5 +21,6 @@ namespace GoWork.DTOs.CompanyInterviewDTOs
         public int? CountryId { get; set; }
         public int? GovernateId { get; set; }
         public string? AddressLine { get; set; }
+        public int? AddressId { get; set; }
     }
 }

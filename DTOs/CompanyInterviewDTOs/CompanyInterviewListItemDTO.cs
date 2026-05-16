@@ -10,7 +10,10 @@ namespace GoWork.DTOs.CompanyInterviewDTOs
         public string InterviewType { get; set; } = string.Empty;
         public string InterviewStatus { get; set; } = string.Empty;
         public string? Location { get; set; }
-
+        public int? CountryId { get; set; }
+        public int? GovernateId { get; set; }
+        public string? AddressLine { get; set; }
+        public int? AddressId { get; set; }
         // Dynamic action flags
         public bool CanCancel { get; set; }
         public bool CanReschedule { get; set; }

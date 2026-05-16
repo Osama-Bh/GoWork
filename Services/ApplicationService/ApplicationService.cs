@@ -329,7 +329,8 @@ namespace GoWork.Services.ApplicationService
             }
 
             // Create address for InPerson interviews
-            int addressId;
+            int? addressId = null;
+
             if (dto.InterviewTypeId == (int)InterviewTypeEnum.InPerson)
             {
                 var address = new Address
@@ -338,32 +339,12 @@ namespace GoWork.Services.ApplicationService
                     GovernateId = dto.GovernateId!.Value,
                     AddressLine1 = dto.AddressLine!
                 };
+
                 _context.TbAddresses.Add(address);
+
                 await _context.SaveChangesAsync();
+
                 addressId = address.Id;
-            }
-            else
-            {
-                // For online/phone interviews, create a placeholder address
-                // using the employer's address or a default
-                var employer = await _context.TbEmployers.FirstOrDefaultAsync(e => e.Id == employerId);
-                if (employer?.AddressId != null)
-                {
-                    addressId = employer.AddressId.Value;
-                }
-                else
-                {
-                    // Create a minimal address record
-                    var defaultAddress = new Address
-                    {
-                        CountryId = 1, // Default
-                        GovernateId = 1, // Default
-                        AddressLine1 = "Online"
-                    };
-                    _context.TbAddresses.Add(defaultAddress);
-                    await _context.SaveChangesAsync();
-                    addressId = defaultAddress.Id;
-                }
             }
 
             // Create the interview
@@ -374,10 +355,9 @@ namespace GoWork.Services.ApplicationService
                 InterviewTypeId = dto.InterviewTypeId,
                 AddressId = addressId,
                 Notes = dto.Notes,
-                MeetingLink = dto.InterviewTypeId == (int)InterviewTypeEnum.Online ? dto.MeetingLink : null,
+                MeetingLink = dto.InterviewTypeId == (int)InterviewTypeEnum.Online? dto.MeetingLink: null,
                 InterviewStatusId = (int)InterviewStatusEnum.Scheduled
             };
-
             _context.TbInterviews.Add(interview);
 
             // Update application status to Shortlisted
