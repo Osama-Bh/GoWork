@@ -14,7 +14,7 @@ namespace GoWork.Models
         public int InterviewTypeId { get; set; }
         [ForeignKey("InterviewTypeId")]
         public InterviewType InterviewType { get; set; } = null!;
-        public int AddressId { get; set; }
+        public int? AddressId { get; set; }
         public Address Address { get; set; } = null!;
         [StringLength(200, ErrorMessage = "Notes cannot exceed 100 characters.")]
         public string? Notes { get; set; }
