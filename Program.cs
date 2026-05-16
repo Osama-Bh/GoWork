@@ -1,16 +1,19 @@
 
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using GoWork.Authorization.Handlers;
 using GoWork.Data;
 using GoWork.Service.AccountService;
 using GoWork.Services.AdminService;
 using GoWork.Services.ApplicationService;
+using GoWork.Services.CurrentUserService;
 using GoWork.Services.EmailService;
 using GoWork.Services.FeedbackService;
 using GoWork.Services.FileService;
 using GoWork.Services.InterviewService;
 using GoWork.Services.NotificationService;
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -140,6 +143,8 @@ namespace GoWork
             builder.Services.AddScoped<IInterviewService, InterviewService>();
             builder.Services.AddScoped<IFeedbackService, FeedbackService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IAuthorizationHandler, ApplicationAuthorizationHandler>();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             #endregion
 
 
