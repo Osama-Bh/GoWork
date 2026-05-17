@@ -182,6 +182,8 @@ namespace GoWork.Services.InterviewService
                     InterviewDate = i.InterviewDate,
                     InterviewType = i.InterviewType.Name,
                     InterviewStatus = i.InterviewStatus.Name,
+                    Notes = i.Notes,
+                    Email = i.Application.Seeker.ApplicationUser.Email,
                     CountryId = i.Address.CountryId,
                     GovernateId = i.Address.GovernateId,
                     AddressLine = i.Address.AddressLine1,
