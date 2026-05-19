@@ -1,4 +1,6 @@
-﻿namespace GoWork.DTOs.AuthDTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace GoWork.DTOs.AuthDTOs
 {
     public class UpdateProfileDTO
     {
@@ -9,6 +11,7 @@
         public IFormFile? ProfilePhoto { get; set; }
         public IFormFile? ResumeFile { get; set; }
         public List<string>? Skills { get; set; }
+        public int? InterstedInCategoryId { get; set; }
 
     }
 }

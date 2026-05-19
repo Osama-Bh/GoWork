@@ -6,6 +6,7 @@
         public string MiddleName { get; set; }
         public string LastName { get; set; }
         public string Emial { get; set; }
+        public string InterestedInCategory { get; set; } = null!;
         public string? ProfilePhotoUrl { get; set; }
         public DateTimeOffset ExpiresAt { get; set; } = DateTimeOffset.UtcNow;
         public List<string> Skills { get; set; } = new List<string>();
