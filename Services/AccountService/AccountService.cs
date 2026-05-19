@@ -351,6 +351,9 @@ namespace GoWork.Service.AccountService
 
                 if (dto.LastName != null)
                     candidate.LastName = dto.LastName;
+                
+                if (dto.InterstedInCategoryId != null && _context.TbCategories.Any(c => c.Id == dto.InterstedInCategoryId.Value))
+                    candidate.InterestCategoryId = dto.InterstedInCategoryId.Value;
 
                 if (dto.PhoneNo is not null)
                 {
@@ -479,6 +482,7 @@ namespace GoWork.Service.AccountService
                 .Include(c => c.SeekerSkills)
                     .ThenInclude(cs => cs.Skill)
                     .Include(c => c.ApplicationUser)
+                    .Include(c => c.InterestCategory)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (candidate == null)
@@ -499,6 +503,7 @@ namespace GoWork.Service.AccountService
                 MiddleName = string.IsNullOrEmpty(candidate.MiddleName) ? null : candidate.MiddleName,
                 LastName = candidate.LastName,
                 PhoneNo = candidate.ApplicationUser.PhoneNumber != null ? candidate.ApplicationUser.PhoneNumber : "",
+                InterestedInCategory = candidate.InterestCategory != null ? candidate.InterestCategory.Name : "",
                 ProfilPhotoUrl = lstFillsDTO[0] is null ? null : lstFillsDTO[0].SasUrl,
                 PictureExpirationDate = lstFillsDTO[0] is null ? null : lstFillsDTO[0].ExpiresAt,
                 ResumeUrl = lstFillsDTO[1] is null ? null : lstFillsDTO[1].SasUrl,

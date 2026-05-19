@@ -10,6 +10,7 @@
         public string? MiddleName { get; set; }
         public string LastName { get; set; } = null!;
         public string PhoneNo { get; set; }
+        public string InterestedInCategory { get; set; } = null!;
         public string? ProfilPhotoUrl { get; set; }
         public DateTimeOffset? PictureExpirationDate { get; set; }
         public string? ResumeUrl { get; set; }
