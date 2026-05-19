@@ -193,8 +193,10 @@ namespace GoWork.Services.InterviewService
 
             //var today = DateTime.UtcNow.Date;
 
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
+            //var today = DateTime.UtcNow.Date;
+            //var tomorrow = today.AddDays(1);
+
+            var now = DateTime.UtcNow;
 
             // Paginate and project
             var items = await baseQuery
@@ -234,30 +236,58 @@ namespace GoWork.Services.InterviewService
                     //CanMarkMissing = i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
                     //               && i.InterviewDate.Date == today
 
-                        CanCancel =
-                    (
-                        i.InterviewStatusId == (int)InterviewStatusEnum.Scheduled
-                        && i.InterviewDate >= today
-                    )
-                    ||
-                    (
-                        i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
-                        && i.InterviewDate >= tomorrow
-                    ),
+                    /////////////////////////
 
-                        CanReschedule =
+                    //    CanCancel =
+                    //(
+                    //    i.InterviewStatusId == (int)InterviewStatusEnum.Scheduled
+                    //    && i.InterviewDate >= today
+                    //)
+                    //||
+                    //(
+                    //    i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
+                    //    && i.InterviewDate >= tomorrow
+                    //),
+
+                    //    CanReschedule =
+                    //i.InterviewStatusId == (int)InterviewStatusEnum.Scheduled
+                    //&& i.InterviewDate >= tomorrow,
+
+                    //   CanComplete =
+                    //i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
+                    //&& i.InterviewDate >= today
+                    //&& i.InterviewDate < tomorrow,
+
+                    //    CanMarkMissing =
+                    //i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
+                    //&& i.InterviewDate >= today
+                    //&& i.InterviewDate < tomorrow
+
+                    ////////////////////////////
+
+                                CanCancel =
+                (
                     i.InterviewStatusId == (int)InterviewStatusEnum.Scheduled
-                    && i.InterviewDate >= tomorrow,
-
-                       CanComplete =
+                    && i.InterviewDate > now
+                )
+                ||
+                (
                     i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
-                    && i.InterviewDate >= today
-                    && i.InterviewDate < tomorrow,
+                    && i.InterviewDate > now
+                ),
 
-                        CanMarkMissing =
-                    i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
-                    && i.InterviewDate >= today
-                    && i.InterviewDate < tomorrow
+                                CanReschedule =
+                i.InterviewStatusId == (int)InterviewStatusEnum.Scheduled
+                && i.InterviewDate > now,
+
+                                CanComplete =
+                i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
+                && i.InterviewDate <= now,
+
+                                CanMarkMissing =
+                i.InterviewStatusId == (int)InterviewStatusEnum.Confirmed
+                && i.InterviewDate <= now,
+
                 })
                 .ToListAsync();
 
