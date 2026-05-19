@@ -14,6 +14,9 @@ namespace GoWork.DTOs.CompanyInterviewDTOs
         public int? GovernateId { get; set; }
         public string? AddressLine { get; set; }
         public int? AddressId { get; set; }
+        public string? Notes {  get; set; } = string.Empty;
+        public string? Email { get; set; }
+
         // Dynamic action flags
         public bool CanCancel { get; set; }
         public bool CanReschedule { get; set; }

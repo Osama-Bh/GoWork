@@ -52,5 +52,21 @@ namespace GoWork.Controllers
 
             return Ok(countries);
         }
+
+        [HttpGet("IsEmailExist")]
+        public IActionResult IsEmailExists(string Email)
+        {
+            var IsEmailExists = _context.Users.Where(s => s.Email == Email);
+
+            return Ok(IsEmailExists);
+        }
+
+        [HttpGet("TimeZone")]
+        public IActionResult TimeZone()
+        {
+            var TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Aden");
+
+            return Ok(TimeZone);
+        }
     }
 }
