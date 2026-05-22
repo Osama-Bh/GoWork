@@ -49,7 +49,7 @@ namespace GoWork.Controllers.Dashboard
         /// Get all feedback entries (Admin only).
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SubAdmin")]
         public async Task<ActionResult<ApiResponse<PaginatedResult<FeedbackResponseDTO>>>> GetFeedbacks(
             [FromQuery] int? feedbackTypeId,
             [FromQuery] bool? isRead,
@@ -71,7 +71,7 @@ namespace GoWork.Controllers.Dashboard
         /// Mark a feedback as read (Admin only).
         /// </summary>
         [HttpPatch("{id}/read")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SubAdmin")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> MarkAsRead(int id)
         {
             var response = await _feedbackService.MarkAsReadAsync(id);
@@ -86,7 +86,7 @@ namespace GoWork.Controllers.Dashboard
         /// Delete a feedback entry (Admin only).
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SubAdmin")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> DeleteFeedback(int id)
         {
             var response = await _feedbackService.DeleteFeedbackAsync(id);
@@ -101,7 +101,7 @@ namespace GoWork.Controllers.Dashboard
         /// Send an email reply to a user (Admin only).
         /// </summary>
         [HttpPost("send-reply")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SubAdmin")]
         public async Task<ActionResult<ApiResponse<ConfirmationResponseDTO>>> SendReply(
             [FromBody] SendEmailRequestDTO dto)
         {
