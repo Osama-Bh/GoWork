@@ -6,6 +6,7 @@ namespace GoWork.Services.AdminService
 {
     public interface IAdminService
     {
+        Task<ApiResponse<AdminDashboardStatisticsDTO>> GetAdminDashboardStatisticsAsync();
         Task<ApiResponse<CompanyStatisticsDTO>> GetCompanyStatisticsAsync();
 
         Task<ApiResponse<PaginatedResult<CompanyListItemDTO>>> GetCompaniesAsync(
