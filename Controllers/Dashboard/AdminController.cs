@@ -20,6 +20,22 @@ namespace GoWork.Controllers.Dashboard
         }
 
         /// <summary>
+        /// Get combined dashboard statistics for shared Admin/SubAdmin dashboard cards.
+        /// </summary>
+        [HttpGet("dashboard-statistics")]
+        public async Task<ActionResult<ApiResponse<AdminDashboardStatisticsDTO>>> GetDashboardStatistics()
+        {
+            var response = await _adminService.GetAdminDashboardStatisticsAsync();
+
+            if (response.StatusCode != 200)
+            {
+                return StatusCode(response.StatusCode, response);
+            }
+
+            return Ok(response);
+        }
+
+        /// <summary>
         /// Get company statistics for dashboard cards.
         /// </summary>
         [HttpGet("statistics")]

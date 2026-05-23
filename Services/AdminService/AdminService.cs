@@ -24,6 +24,28 @@ namespace GoWork.Services.AdminService
             _emailService = emailService;
         }
 
+        public async Task<ApiResponse<AdminDashboardStatisticsDTO>> GetAdminDashboardStatisticsAsync()
+        {
+            var utcNow = DateTime.UtcNow;
+            var startOfMonth = new DateTime(utcNow.Year, utcNow.Month, 1);
+
+            var daysSinceMonday = ((int)utcNow.DayOfWeek + 6) % 7;
+            var startOfWeek = utcNow.Date.AddDays(-daysSinceMonday);
+
+            var stats = new AdminDashboardStatisticsDTO
+            {
+                TotalCompanies = await _context.TbEmployers.CountAsync(),
+                TotalFeedbacks = await _context.TbFeedbacks.CountAsync(),
+                PendingVerificationRequests = await _context.TbEmployers.CountAsync(e => e.EmployerStatusId == (int)EmployerStatusEnum.PendingApproval),
+                UnreadFeedbacks = await _context.TbFeedbacks.CountAsync(f => !f.IsRead),
+                TotalPublishedJobs = await _context.TbJobs.CountAsync(),
+                CompaniesRegisteredThisMonth = await _context.TbEmployers.CountAsync(e => e.CreatedAt >= startOfMonth),
+                NewFeedbacksThisWeek = await _context.TbFeedbacks.CountAsync(f => f.CreatedAt >= startOfWeek)
+            };
+
+            return new ApiResponse<AdminDashboardStatisticsDTO>(200, stats);
+        }
+
         public async Task<ApiResponse<CompanyStatisticsDTO>> GetCompanyStatisticsAsync()
         {
             var employers = _context.TbEmployers;
