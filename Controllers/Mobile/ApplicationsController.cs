@@ -50,6 +50,8 @@ namespace GoWork.Controllers.Mobile
             return Ok(response);
         }
 
+        
+
         [HttpGet("statuses")]
         public async Task<ActionResult<ApiResponse<List<LookUpDTO>>>> GetApplicationStatuses()
         {

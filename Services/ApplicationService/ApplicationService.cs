@@ -138,6 +138,7 @@ namespace GoWork.Services.ApplicationService
             });
         }
 
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> WithdrawApplicationAsync(int applicationId, int userId)
         {
             var seeker = await _context.TbSeekers

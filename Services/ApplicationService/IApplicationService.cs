@@ -10,12 +10,14 @@ namespace GoWork.Services.ApplicationService
     {
         // mobile methods 
         public Task<ApiResponse<ApplicationsResponseDTO>> GetCandidateApplications(ApplicationsRequestDTO requestDTO);
+        
         public Task<ApiResponse<List<LookUpDTO>>> GetApplicationStatuses();
         public Task<ApiResponse<ConfirmationResponseDTO>> WithdrawApplicationAsync(int applicationId, int userId);
 
         // company dashboard methods
         Task<ApiResponse<PaginatedResult<CompanyApplicationListItemDTO>>> GetCompanyApplicationsAsync(
             int employerId, CompanyApplicationsRequestDTO request);
+        
         Task<ApiResponse<PaginatedResult<CompanyApplicationListItemDTO>>> GetCompanyEmploymentRecordsAsync(
             int employerId, CompanyApplicationsRequestDTO request);
         Task<ApiResponse<CompanyApplicationFiltersDTO>> GetCompanyApplicationFiltersAsync(int employerId);
