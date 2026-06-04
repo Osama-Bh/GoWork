@@ -22,6 +22,7 @@ namespace GoWork.Services.ApplicationService
             int employerId, CompanyApplicationsRequestDTO request);
         Task<ApiResponse<CompanyApplicationFiltersDTO>> GetCompanyApplicationFiltersAsync(int employerId);
         Task<ApiResponse<CompanyApplicationFiltersDTO>> GetCompanyEmploymentRecordFiltersAsync(int employerId);
+        Task<ApiResponse<CompanyApplicationDetailsDTO>> GetCompanyApplicationDetailsAsync(int employerId, int applicationId);
         Task<ApiResponse<ConfirmationResponseDTO>> RejectApplicationAsync(int employerId, int applicationId);
         Task<ApiResponse<ConfirmationResponseDTO>> HireApplicationAsync(int employerId, int applicationId);
         Task<ApiResponse<ConfirmationResponseDTO>> ScheduleInterviewAsync(
