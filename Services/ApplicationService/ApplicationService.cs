@@ -363,6 +363,45 @@ namespace GoWork.Services.ApplicationService
             });
         }
 
+        public async Task<ApiResponse<CompanyApplicationDetailsDTO>> GetCompanyApplicationDetailsAsync(int employerId, int applicationId)
+        {
+            var application = await _context.TbApplications
+                .Include(a => a.Job)
+                .Include(a => a.Seeker)
+                .ThenInclude(s => s.ApplicationUser)
+                .Include(a => a.ApplicationStatus)
+                .FirstOrDefaultAsync(a => a.Id == applicationId && a.Job.EmployerId == employerId);
+
+            if (application == null)
+                return new ApiResponse<CompanyApplicationDetailsDTO>(404, "Application not found or unauthorized access.");
+
+            var dto = new CompanyApplicationDetailsDTO
+            {
+                ApplicationId = application.Id,
+                ProfilePhoto = application.Seeker.ProfilePhoto,
+                FullName = (application.Seeker.FirsName + " " + application.Seeker.MiddleName + " " + application.Seeker.LastName).Replace("  ", " ").Trim(),
+                Email = application.Seeker.ApplicationUser.Email ?? string.Empty,
+                JobTitle = application.Job.Title,
+                ApplicationDate = application.ApplicationDate,
+                MatchingPercentage = application.MatchingPercentage,
+                ApplicationStatus = application.ApplicationStatus.Name,
+                CvDownloadUrl = application.Seeker.ResumeUrl,
+                CanReject = application.ApplicationStatusId == (int)ApplicationStatusEnum.PendingReview
+                         || application.ApplicationStatusId == (int)ApplicationStatusEnum.Shortlisted
+                         || application.ApplicationStatusId == (int)ApplicationStatusEnum.Interviewed,
+                CanSchedule = application.ApplicationStatusId == (int)ApplicationStatusEnum.PendingReview,
+                CanHire = application.ApplicationStatusId == (int)ApplicationStatusEnum.Interviewed
+            };
+
+            if (!string.IsNullOrEmpty(dto.ProfilePhoto))
+                dto.ProfilePhoto = _fileService.DownloadUrlAsync(dto.ProfilePhoto)?.SasUrl;
+
+            if (!string.IsNullOrEmpty(dto.CvDownloadUrl))
+                dto.CvDownloadUrl = _fileService.DownloadUrlAsync(dto.CvDownloadUrl)?.SasUrl;
+
+            return new ApiResponse<CompanyApplicationDetailsDTO>(200, dto);
+        }
+
         public async Task<ApiResponse<ConfirmationResponseDTO>> RejectApplicationAsync(int employerId, int applicationId)
         {
             var application = await _context.TbApplications

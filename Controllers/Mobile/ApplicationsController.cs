@@ -267,6 +267,25 @@ namespace GoWork.Controllers.Mobile
             var response = await _applicationService.GetCompanyApplicationFiltersAsync(employerId.Value);
             return Ok(response);
         }
+
+        /// <summary>
+        /// Get details of a specific application for the company.
+        /// </summary>
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Company,Admin")]
+        public async Task<ActionResult<ApiResponse<CompanyApplicationDetailsDTO>>> GetCompanyApplicationDetails(int id)
+        {
+            var employerId = await GetEmployerIdAsync();
+            if (employerId == null)
+                return Unauthorized(new ApiResponse<string>(401, "Company profile not found."));
+
+            var response = await _applicationService.GetCompanyApplicationDetailsAsync(employerId.Value, id);
+            if (response.StatusCode != 200)
+                return StatusCode(response.StatusCode, response);
+
+            return Ok(response);
+        }
+
         /// <summary>
         /// Reject an application. Allowed from PendingReview, Shortlisted, or Interviewed status.
         /// </summary>
