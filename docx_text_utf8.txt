@@ -1,0 +1,404 @@
+﻿Republic of Yemen University of Science and Technology Faculty of Computing and Information Information Technology DepartmentRepublic of Yemen University of Science and Technology Faculty of Computing and Information Information Technology Department
+Republic of Yemen 
+University of Science and Technology 
+Faculty of Computing and Information 
+Information Technology Department
+Republic of Yemen 
+University of Science and Technology 
+Faculty of Computing and Information 
+Information Technology Department
+Yemeni  Job Search Mobile ApplicationYemeni  Job Search Mobile Application
+Yemeni  Job Search Mobile Application
+Yemeni  Job Search Mobile Application
+Final Project Submitted in Partial Fulfilment of the Requirements for the Degree of Bachelor in Information TechnologyFinal Project Submitted in Partial Fulfilment of the Requirements for the Degree of Bachelor in Information Technology
+Final Project 
+Submitted in Partial Fulfilment of the Requirements for the Degree of Bachelor in Information Technology
+Final Project 
+Submitted in Partial Fulfilment of the Requirements for the Degree of Bachelor in Information Technology
+Prepared by:Prepared by:
+Prepared by:
+Prepared by:
+Supervisor: Dr. Aziz Nasser Bin SamaSupervisor: Dr. Aziz Nasser Bin Sama
+Supervisor: 
+Dr. Aziz Nasser Bin Sama
+Supervisor: 
+Dr. Aziz Nasser Bin Sama
+Chapter (1)
+INTRTODUCTION
+1.1 Introduction
+In the era of digital transformation, technology has reshaped almost every aspect of human life, including the way individuals search for jobs and the way organizations recruit talent. Traditional approaches such as printed job advertisements, bulletin boards, and recruitment agencies are no longer sufficient to meet the dynamic needs of the labor market. Job seekers require tools that are fast, efficient, and capable of connecting them directly with opportunities that match their skills, while employers demand platforms that help them identify the right talent with minimal effort and cost.
+The proposed project introduces a mobile application designed specifically to bridge this gap by creating a direct and intelligent connection between job seekers and employers. The system consists of two main components: a mobile application for job seekers and a dedicated dashboard for companies and Admin. Through the dashboard, employers can register, post job opportunities, and specify key details such as required skills, offered salary, type of employment (on-site or remote), workplace location, and other relevant job information. In addition, the dashboard provides companies with tools to manage job applications, view submitted CVs, and take actions such as accepting or rejecting applicants.
+On the other side, the mobile application serves as a comprehensive platform for job seekers. Users can register, upload their CVs, and browse through the available job opportunities. For every listed vacancy, they can view detailed information, including required skills and job specifications, and apply directly through the platform. Once an application is submitted, the system ensures transparency by enabling users to track the status of their applicationsùwhether they are accepted, rejected, or still under review.
+One of the unique features of this project is the integration of Artificial Intelligence (AI) to provide personalized job recommendations. Unlike existing job portals that rely primarily on keyword matching, this application introduces a dynamic skill-based system. Users are given the ability to input and periodically update a list of their skills through a dedicated form. These skills are analyzed by an AI module to determine the relevance of available job postings. For example, if a vacancy requires computer proficiency and the applicant has listed programming as a skill, the AI system can infer that the applicant qualifies for the job. However, if a skill such as English fluency has no direct relation to the job requirements, the system will exclude that position from the recommendations. This ensures that users are presented with jobs that are meaningful and aligned with their career paths.
+This introduction highlights the significance of the project in addressing the shortcomings of current recruitment platforms. By combining user-friendly interfaces, transparent processes, and AI-driven intelligence, the system promises to enhance both the job-seeking and recruitment experiences. Employers benefit from streamlined applicant management, while job seekers gain access to relevant opportunities with improved clarity and confidence. Ultimately, the project aspires to transform the recruitment landscape within the Yemeni job market, making it more efficient, transparent, and accessible to all stakeholders.
+1.2 Motivation
+The motivation for this project arises from the persistent challenges in the job market, particularly in Yemen, where unemployment rates are high and access to suitable employment opportunities remains limited. Job seekers often face difficulties in finding positions that match their skills, while employers struggle to navigate through an overwhelming number of irrelevant applications. Existing job platforms fail to provide the level of personalization and transparency that modern recruitment demands.
+By developing a mobile application powered by AI, this project seeks to bridge the gap between talent and opportunity. The motivation is to empower job seekers with tools that make their employment search more targeted and effective, while simultaneously enabling employers to recruit efficiently. Furthermore, the project aims to contribute to the local economy by improving the alignment between available talent and labor market needs.
+1.3 Problem Statement
+The Yemeni labor market suffers from limited communication channels and the absence of a dedicated job platform. International platforms list very few opportunities relevant to Yemen, which makes it difficult for job seekers to find suitable positions. As a result, access to reliable postings is restricted and overall employment efficiency remains low. Therefore, there is a pressing need for a specialized, localized application that bridges this gap through direct interaction, AI-driven job matching, and transparent application tracking.
+1.4 Objectives
+The primary objectives of this project are as follows:
+To design and implement a mobile application that facilitates direct interaction between job seekers and employers.
+To develop a company dashboard for managing job postings, reviewing applications, and taking decisions regarding applicants.
+To integrate AI-driven job matching based on user-entered skills.
+To ensure transparency by enabling job seekers to track the status of their applications.
+To improve efficiency in recruitment by reducing irrelevant applications and focusing on skill-based matching.
+To provide an accessible and user-friendly platform suitable for the Yemeni job market context.
+1.5 Scope
+The scope of this project includes the development of:
+Job Seeker Interface: Registration, CV uploading, skill entry/update, job browsing, application submission, and status tracking.
+Company Dashboard: Registration, job posting with detailed specifications, application review, CV browsing, and acceptance/rejection management.
+AI-Powered Matching: A system for analyzing user skill lists to match them with job requirements.
+Notification System: Intelligent notifications to inform users of job postings that align with their qualifications.
+Focus on the Yemeni labor market initially, with scalability for future expansion to other regions.
+1.6 Importance of Project
+This project holds significant importance on multiple levels. For job seekers, it provides an efficient, transparent, and personalized way of accessing relevant job opportunities, reducing time and effort in the employment search process. For employers, it offers a streamlined recruitment process, saving resources and ensuring that suitable candidates are identified quickly.
+On a broader scale, the project contributes to addressing unemployment challenges in Yemen by facilitating better alignment between available skills and market needs. By integrating AI, the system introduces innovation into the recruitment process, setting a foundation for more intelligent and data-driven labor market solutions. Additionally, the project serves as a practical demonstration of how IT solutions can be applied to solve pressing socio-economic challenges, making it a valuable academic and real-world contribution.
+Chapter (2) 
+LITERATURE REVIEW
+2.1 Introduction 
+In this chapter, the potential benefits of using interactive mobile applications and web-based platforms for employment will be explored. The discussion will highlight how digital recruitment systems can transform the way job seekers and companies connect, with a focus on the Yemeni labor market. Some of the challenges that need to be addressed before such systems can be widely adopted in Yemen will also be discussed. This will be done by presenting and analyzing some of the previous studies and platforms related to digital recruitment and job-matching technologies.
+Many recruitment platforms and applications have been developed worldwide, offering diverse features and approaches to bridge the gap between employers and job seekers. These platforms come with their own advantages and disadvantages. In this study, selected platforms will be examined to analyze their methods of operation, identify their strengths, and point out their shortcomings. Notes and comparisons will be made to show how the proposed system can build upon existing solutions while avoiding common pitfalls.
+Furthermore, a detailed description of the Yemeni labor market will be provided, including its unique challenges such as limited access to advanced recruitment technologies, the mismatch between job seekersÆ skills and market requirements, and the lack of transparency in application processes. This background will help demonstrate the necessity of a specialized mobile application designed to connect Yemeni companies with job seekers more effectively, using artificial intelligence to enhance skill-based matching and streamline communication between both parties.
+2.2 Previous Studies
+2.2.1 LinkedIn
+LinkedIn is a leading online professional networking platform that connects individuals, companies, and professionals worldwide [1]. It was launched in 2003 and has become an essential part of recruitment, marketing, and professional relationship-building strategies.
+Figure 2.3 Search PageFigure 2.3 Search PageFigure 2.2 Register PageFigure 2.2 Register PageFigure 2.1 Home PageFigure 2.1 Home Page
+Figure 2.3 Search Page
+Figure 2.3 Search Page
+Figure 2.2 Register Page
+Figure 2.2 Register Page
+Figure 2.1 Home Page
+Figure 2.1 Home Page
+2.2.1.1 Features:
+Large global user base exceeding one billion.
+Provides an integrated platform for building professional relationships.
+Easy job search and application process.
+Content publishing and engagement in professional discussions.
+Integration of AI for smart recommendations.
+2.2.1.2 Limitations:
+Difficult for beginners to quickly build a strong network.
+Some advanced features require a paid subscription.
+Engagement is lower than other social networks due to professional usage.
+difficult to use by beginner
+2.2.2 Indeed
+Indeed is one of the worldÆs largest job search engines, designed to connect millions of job seekers with employers across a wide range of industries and locations [2]. The app enables users to search for job opportunities worldwide using keywords, job titles, company names, and location filters.
+Figure 2.6 Jobs PageFigure 2.6 Jobs PageFigure 2.5 Profile PageFigure 2.5 Profile PageFigure 2.4 My Jobs PageFigure 2.4 My Jobs Page
+Figure 2.6 Jobs Page
+Figure 2.6 Jobs Page
+Figure 2.5 Profile Page
+Figure 2.5 Profile Page
+Figure 2.4 My Jobs Page
+Figure 2.4 My Jobs Page
+2.2.2.1 Features:
+Ability to upload a rÚsumÚ for companies to view.
+Accurate job filtering by skills and location.
+Easy and intuitive user interface.
+Option to save favourite jobs and apply quickly.
+2.2.2.2 Limitations:
+Does not include advanced AI-powered skill analysis for job matching.
+Heavy reliance on past user data may reduce recommendation accuracy.
+2.2.3 Any Jobs
+Ay Jobs is a Saudi-based job application dedicated to delivering the latest employment opportunities within the Kingdom of Saudi Arabia [3]. The app specializes in aggregating and publishing job announcements from both government and private sectors, as well as military institutions.
+Figure 2.8 Job PageFigure 2.8 Job PageFigure 2.7 News PageFigure 2.7 News Page
+Figure 2.8 Job Page
+Figure 2.8 Job Page
+Figure 2.7 News Page
+Figure 2.7 News Page
+Figure 2.9 Info PageFigure 2.9 Info Page
+Figure 2.9 Info Page
+Figure 2.9 Info Page
+2.2.3.1 Features:
+Daily job updates.
+Focused on the Saudi local market.
+Simple Arabic-based interface.
+2.2.3.2 Limitations:
+Lacks rÚsumÚ upload or direct application features.
+Functions more like a job-news aggregator than a full recruitment platform.
+2.2.4 Fekra
+Fekra is a digital platform designed to support entrepreneurial ideas and transform them into real projects [4]. It connects idea owners with investors and mentors, providing an innovative environment to present ideas, receive feedback, and gain access to investment or training opportunities.
+Figure 2.10 Register PageFigure 2.10 Register Page
+Figure 2.10 Register Page
+Figure 2.10 Register Page
+Figure 2.11 Home PageFigure 2.11 Home PageFigure 2.12 Control Panel PageFigure 2.12 Control Panel Page
+Figure 2.11 Home Page
+Figure 2.11 Home Page
+Figure 2.12 Control Panel Page
+Figure 2.12 Control Panel Page
+2.2.4.1 Features:
+Simplifies presenting entrepreneurial ideas in an organized way.
+Enables entrepreneurs to connect with investors.
+Provides training and funding opportunities.
+User-friendly interface on mobile devices.
+2.2.4.2 Limitations:
+Limited reach to a broad network of global investors
+Difficulty in ensuring originality and seriousness of submitted ideas
+Some features may require a paid subscription
+Engagement may remain limited if an active community is not built around the app
+2.2.5 GulfTalent
+GulfTalent is a job search platform in the Middle East, serving as a bridge between employers and skilled professionals across the region [5]. The platform is especially recognized for catering to mid- and senior-level positions in large corporations and multinational companies.
+Figure 2.13 Register PageFigure 2.13 Register Page
+Figure 2.13 Register Page
+Figure 2.13 Register Page
+Figure 2.15 Search PageFigure 2.15 Search PageFigure 2.14 CV PageFigure 2.14 CV Page
+Figure 2.15 Search Page
+Figure 2.15 Search Page
+Figure 2.14 CV Page
+Figure 2.14 CV Page
+2.2.5.1 Features:
+Clear focus on prestigious, high-paying jobs.
+Simple and user-friendly interface.
+Supports direct communication between companies and candidates.
+Provides salary insights and labor market trends.
+2.2.5.2 Limitations:
+Limited opportunities for entry-level or small-scale jobs.
+Often requires advanced professional experience, reducing chances for fresh graduates.
+Some advanced features require a paid subscription.
+2.2.6 JobHunt
+JobHunt is a comprehensive global job search platform designed to connect job seekers with employers across various industries [6]. The app provides access to an extensive database of opportunities, ranging from entry-level roles to senior management positions.
+Figure 2.16 Jobs PageFigure 2.16 Jobs Page
+Figure 2.16 Jobs Page
+Figure 2.16 Jobs Page
+Figure 2.17 Notification PageFigure 2.17 Notification PageFigure 2.18 Profile PageFigure 2.18 Profile Page
+Figure 2.17 Notification Page
+Figure 2.17 Notification Page
+Figure 2.18 Profile Page
+Figure 2.18 Profile Page
+2.2.6.1 Features:
+Wide global reach.
+Advanced search options.
+Ability to upload rÚsumÚs and apply directly.
+Sends regular notifications with new job listings.
+2.2.6.2 Limitations:
+Focuses more on global markets, which may not always suit local job seekers.
+Limited Arabic language support.
+2.2.7 Wzfni
+Wzfni is a platform that connects job seekers with employers. [7] It provides services such as CV preparation, sending CVs to multiple companies, and offering paid packages for broader access to job opportunities.
+Figure 2.21 Jobs PageFigure 2.21 Jobs PageFigure 2.20 Home PageFigure 2.20 Home PageFigure 2.19 Login PageFigure 2.19 Login Page
+Figure 2.21 Jobs Page
+Figure 2.21 Jobs Page
+Figure 2.20 Home Page
+Figure 2.20 Home Page
+Figure 2.19 Login Page
+Figure 2.19 Login Page
+2.2.7.1 Features:
+Send CVs to multiple companies with one click
+Different packages with varied benefits (reach, exposure, guarantees)
+Clear privacy and store policies outlining the platformÆs intermediary role
+2.2.7.2 Limitations:
+Limited reach to a broad network of global investors
+Difficulty in ensuring originality and seriousness of submitted ideas
+Some features may require a paid subscription
+Engagement may remain limited if an active community is not built around the app
+2.2.8 ZipRecruiter:
+ZipRecruiter is a leading online employment marketplace that connects job seekers with employers [8]. It leverages AI-poweredtechnology to streamline the hiring process, offering features like instant job alerts, one-click applications, and smart matching between candidates and job openings .
+Figure 2.22 Login PageFigure 2.22 Login PageFigure 2.23 Home PageFigure 2.23 Home PageFigure 2.24 Jobs PageFigure 2.24 Jobs Page
+Figure 2.22 Login Page
+Figure 2.22 Login Page
+Figure 2.23 Home Page
+Figure 2.23 Home Page
+Figure 2.24 Jobs Page
+Figure 2.24 Jobs Page
+2.2.8.1 Features:
+AI-Powered Matching: Utilizes artificial intelligence to match job seekers with relevant job openings and employers with suitable candidates.
+One-Click Apply: Simplifies the application process for job seekers, allowing them to apply to multiple jobs quickly with a pre-filled profile or resume.
+Extensive Job Board Network: Distributes job postings to over 100 job boards, reaching a wide pool of potential candidates.
+2.2.8.2 Limitations:
+Application Volume: While beneficial for employers, the ease of applying can sometimes lead to a high volume of applications.
+Subscription Costs: For employers, the service can be costly, especially for small businesses or those with frequent hiring needs.
+Job Seeker Experience: Some job seekers report receiving irrelevant job suggestions or a lack of personalized feedback on applications
+2.2.9 Glassdoor:
+Glassdoor is a global platform that provides not only job search capabilities but also company reviews, salary insights, and interview experiences shared by employees [9]. It aims to empower job seekers with detailed information about potential employers.
+Figure 2.27 Jobs Details PageFigure 2.27 Jobs Details PageFigure 2.26 Jobs PageFigure 2.26 Jobs PageFigure 2.25 Search PageFigure 2.25 Search Page
+Figure 2.27 Jobs Details Page
+Figure 2.27 Jobs Details Page
+Figure 2.26 Jobs Page
+Figure 2.26 Jobs Page
+Figure 2.25 Search Page
+Figure 2.25 Search Page
+2.2.9.1 Features:
+Comprehensive job search across industries and locations.
+Access to company reviews and employee ratings.
+Salary transparency and benchmarking.
+Interview insights from candidates.
+Advanced filtering for personalized job search.
+Option to create a profile and upload a resume.
+2.2.9.2 Limitations:
+Some reviews may be biased or outdated.
+Full access to salaries and reviews requires account registration.
+The interface can be overwhelming due to the amount of information.
+Limited availability of detailed data in smaller markets or less-known companies.
+2.2.10 Monster:
+Monster is one of the oldest and most established online job portals [10]. It connects job seekers with employers worldwide by offering job postings, resume uploading, and career advice. The platform has evolved to include mobile applications that allow users to search and apply for jobs on the go.
+Figure 2.29 Refine Results PageFigure 2.29 Refine Results PageFigure 2.30 Check Apply PageFigure 2.30 Check Apply PageFigure 2.28 Search PageFigure 2.28 Search Page
+Figure 2.29 Refine Results Page
+Figure 2.29 Refine Results Page
+Figure 2.30 Check Apply Page
+Figure 2.30 Check Apply Page
+Figure 2.28 Search Page
+Figure 2.28 Search Page
+2.2.10.1 Features:
+Wide database of job opportunities across industries and regions.
+Resume upload and profile creation for easy applications.
+Job alerts and notifications for new postings.
+Company information and career advice resources.
+User-friendly mobile app with quick apply options.
+Global reach with localized versions in different countries.
+2.2.10.2 Limitations:
+Interface design is relatively traditional compared to newer platforms.
+Some job postings may be outdated or duplicated.
+Fewer interactive features compared to platforms like LinkedIn.
+Limited transparency about salaries compared to Glassdoor.
+2.2.11 Al Mehan:
+Almehan is a specialized job search engine that aggregates job postings from various sources such as company websites, recruitment platforms, and agencies [11]. It aims to simplify the job search process by providing a unified and comprehensive database, saving time and effort for job seekers.
+Figure 2.32 Search PageFigure 2.32 Search PageFigure 2.33 Job Details PageFigure 2.33 Job Details PageFigure 2.31 Sign up PageFigure 2.31 Sign up Page
+Figure 2.32 Search Page
+Figure 2.32 Search Page
+Figure 2.33 Job Details Page
+Figure 2.33 Job Details Page
+Figure 2.31 Sign up Page
+Figure 2.31 Sign up Page
+2.2.11.1 Features:
+Simple and user-friendly interface.
+Ability to search for jobs locally and internationally.
+Categorization of jobs by sectors and industries.
+Detailed job postings with application links.
+Filtering tools to refine search results.
+2.2.11.2 Limitations:
+Does not allow creating professional profiles or uploading CVs.
+No direct communication between companies and job seekers.
+Limited interactivity compared to platforms like LinkedIn.
+Traditional design lacking advanced technologies such as AI-based recommendations.
+2.2.12 Job Finder:
+Job Finder is a mobile application designed for job seekers, helping users discover suitable job opportunities based on their specialization and geographic location [12]. It allows users to create personal accounts, upload resumes, and apply directly to jobs. 
+Figure 2.35 Job Search PageFigure 2.35 Job Search PageFigure 2.36 Settings PageFigure 2.36 Settings PageFigure 2.34 Home PageFigure 2.34 Home Page
+Figure 2.35 Job Search Page
+Figure 2.35 Job Search Page
+Figure 2.36 Settings Page
+Figure 2.36 Settings Page
+Figure 2.34 Home Page
+Figure 2.34 Home Page
+2.2.12.1 Features:
+Quick job search by specialization and location.
+Resume upload and one-click job applications.
+Real-time notifications for new job opportunities.
+Simple and user-friendly interface.
+Advanced filters (salary, experience level, job type).
+2.2.12.2 Limitations:
+Some features (like highlighted CVs) require a paid subscription.
+Limited job availability in certain regions or fields.
+Relies on frequent updates from employers, otherwise activity may decrease.
+Does not fully integrate with all global job platform
+2.2.13 Tanqeeb:
+Tanqeeb is a prominent job search engine in the Middle East and North Africa (MENA) region, connecting job seekers with employers across multiple countries, including Egypt, Saudi Arabia, the UAE, and Qatar [13]. The platform aggregates job listings from various sources, 
+Figure 2.37 Home PageFigure 2.37 Home PageFigure 2.38 Job Search PageFigure 2.38 Job Search PageFigure 2.39 Jobs Details PageFigure 2.39 Jobs Details Page
+Figure 2.37 Home Page
+Figure 2.37 Home Page
+Figure 2.38 Job Search Page
+Figure 2.38 Job Search Page
+Figure 2.39 Jobs Details Page
+Figure 2.39 Jobs Details Page
+2.2.13.1 Features:
+Aggregated Job Listings
+Advanced Search Filters
+Multilingual Support
+Wide Geographic Coverage
+2.2.13.2 Limitations:
+Limited Employer Verification Process
+Lack of AI-Driven Job Matching
+Absence of Integrated CV Builder
+User Interface Challenges
+2.2.14 Bayt:
+Bayt.com is one of the oldest and most established job search and recruitment platforms in the Middle East and North Africa (MENA), founded in 2000 [14]. The mobile app enables job seekers to search and apply for jobs, build profiles, and track applications, while employers can post vacancies, search CVs, and communicate with candidates.
+Figure 2.42 Jobs Search PageFigure 2.42 Jobs Search PageFigure 2.41 My Jobs PageFigure 2.41 My Jobs PageFigure 2.40 Profile PageFigure 2.40 Profile Page
+Figure 2.42 Jobs Search Page
+Figure 2.42 Jobs Search Page
+Figure 2.41 My Jobs Page
+Figure 2.41 My Jobs Page
+Figure 2.40 Profile Page
+Figure 2.40 Profile Page
+2.2.14.1 Features:
+AI-Powered Job Description Generator
+Live Chat between Employers and Job Seekers
+Job Alerts and Recommendations
+Profile and CV Building Tools
+2.2.14.2 Limitations:
+Premium Features Restricted to Paid Packages
+Mobile App Stability Issues
+Limited Employer Verification Transparency
+2.2.15 Naukrigulf:
+Naukrigulf is a prominent job search platform catering to the Gulf region, including the UAE, Saudi Arabia, Qatar, Kuwait, Bahrain, and Oman [15]. The app connects job seekers with employers across various industries, offering a user-friendly interface to search, apply for jobs, and manage applications. 
+Figure 2.45 Jobs Search PageFigure 2.45 Jobs Search PageFigure 2.44 Job Details PageFigure 2.44 Job Details PageFigure 2.43 Profile PageFigure 2.43 Profile Page
+Figure 2.45 Jobs Search Page
+Figure 2.45 Jobs Search Page
+Figure 2.44 Job Details Page
+Figure 2.44 Job Details Page
+Figure 2.43 Profile Page
+Figure 2.43 Profile Page
+2.2.15.1 Features:
+Extensive job listings across multiple Gulf countries.
+Advanced search filters by location, industry, experience level, and more.
+Option to apply for full-time, part-time, and contractual positions.
+Personalized job recommendations based on user profile and preferences.
+2.2.15.2 Limitations:
+Limited to job opportunities within the Gulf region.
+Some users report occasional technical issues with app performance 
+The authenticity of certain job listings can be questionable
+Some features may require a premium subscription or payment for full access
+Chapter (3)
+RESEARCH METHODOLOGY
+3.1 Introduction:
+In Chapter One, the project was generally explained by outlining its objectives, identifying the main problems, and defining the overall scope. It also provided a general description of how the proposed Job Search Mobile Application functions. In Chapter Two, previous related studies and existing systems in the area of job search and recruitment were reviewed, along with the technologies and methodologies that support the proposed solution.
+This chapter presents the system design and architecture of the proposed application. It describes the systemÆs structure, major components, and the interactions between them. The design is illustrated through several modeling diagrams, including the Use Case Diagram, Data Flow Diagram (DFD), and Database Design (Entity-Relationship Diagram and Relational Schema). These models help to visualize data flow, user interactions, and the internal processes that enable the system to achieve its primary goal ù efficiently connecting job seekers with companies.
+3.2 System Requirements 
+This section discusses the functional and non-functional requirements of the system.
+3.2.1 Functional Requirements
+Functional requirements define the specific features and behaviors that the Job Search Mobile Application must provide to allow users to accomplish their intended tasks effectively. These requirements describe how the system should respond under certain conditions and what actions it must perform to meet user needs. Clearly defining the functional requirements is essential for both the development team and stakeholders to ensure a shared understanding of the systemÆs expected behavior. In this project, the functional requirements outline how job seekers, companies, and administrators will interact with the application to achieve their respective goals.
+In this project the functional requirements are summarized as the following:
+User Management
+The system shall allow Job Seekers to register, log in, and update their profiles.
+The system shall allow Employers to register, log in, and update their company profiles.
+The system shall allow Admins to approve or reject employer registrations.
+The system shall support role-based access (Job Seeker, Employer, Admin).
+2. Job Seeker Features
+The system shall allow job seekers to create and update CVs or upload them.
+The system shall allow job seekers to search and browse job postings.
+The system shall allow job seekers to apply for jobs and track their applications.
+The system shall provide AI-powered job recommendations based on profile, skills.
+The system shall allow job seekers to receive notifications (e.g., when a new job matches their profile).
+3. Employer Features
+The system shall allow employers to post job vacancies.
+The system shall allow employers to edit, delete, or manage job listings.
+The system shall allow employers to view applications for their job postings.
+The system shall allow employers to shortlist or reject candidates.
+The system shall allow employers to contact job seekers through the platform (messaging or email notifications).
+4. Admin Features
+The system shall allow admins to manage job postings (remove fake or inappropriate jobs).
+The system shall allow admins to manage users (suspend or delete accounts if necessary).
+The admin should handle usersÆ complaints.
+3.2.2 Non-Functional Requirements
+Non-functional requirements describe how the Job Search Mobile Application should perform rather than what specific functions it should provide. These requirements are essential to ensure the systemÆs usability, reliability, performance, and security, which directly impact the overall user experience. They define quality attributes such as the applicationÆs speed, availability, scalability, and ease of use. Clearly specifying these requirements helps guarantee that the system operates efficiently and meets user expectations under different conditions.
+The projectÆs non-functional requirements summarized as the following:
+1. Performance
+The system shall display job listings in less than 3 seconds.
+The system shall support at least 500 concurrent users.
+2. Usability
+The system shall provide a user-friendly and intuitive interface for seekers and companies.
+The system shall support multiple languages (e.g., English and Arabic)
+3. Reliability & Availability
+The system shall provide at least 99.9% uptime availability.
+The system shall ensure backup and restore mechanisms for data recovery.
+4. Scalability
+The system shall be able to scale to support additional features (e.g., online interviews, smarter recommendations) without major redesign.
+5. Security
+User passwords shall be hashed and salted.
+The system shall provide secure authentication and authorization.
+The system shall prevent SQL injection and XSS attacks
+6. Maintainability
+The system shall have well-documented and modular code to support future maintenance.
+3.3 System Analysis and Design
+In this section, the system will be analysed, and its operation and interaction with actors will be explained using diagrams that illustrate this process.
+3.3.1 USECASE Diagram
+3.3.2 DFD Context Diagram
+3.3.3 DFD Level 0 Diagram
+3.3.4 Database Design
