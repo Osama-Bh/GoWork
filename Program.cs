@@ -227,17 +227,8 @@ namespace GoWork
 
             app.UseAuthorization();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseHangfireDashboard();
-            }
-            else
-            {
-                app.UseHangfireDashboard($"https://masarak.app/hangfire", new DashboardOptions
-                {
-                    Authorization = new[] { new HangfireAuthorizationFilter() }
-                });
-            }
+            
+            app.UseHangfireDashboard();
 
             // Hangfire recurring jobs
             if (!app.Environment.IsDevelopment())
