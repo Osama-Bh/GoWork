@@ -240,15 +240,15 @@ namespace GoWork
             }
 
             // Hangfire recurring jobs
-            //if (!app.Environment.IsDevelopment())
-            //{
+            if (!app.Environment.IsDevelopment())
+            {
                 RecurringJob.AddOrUpdate<JobMaintenanceService>(
                     "expire-missed-jobs",
                     service => service.ExpireMissedJobs(),
                     Cron.Hourly);
-            //}
+            }
 
-            //app.UseRateLimiter();
+            app.MapControllers();
 
             app.Run();
         }
