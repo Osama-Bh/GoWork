@@ -166,7 +166,8 @@ namespace GoWork.Services.InterviewService
                     Id = i.Id,
                     JobTitle = i.Application.Job.Title,
                     CompanyName = i.Application.Job.Employer.ComapnyName,
-                    InterviewDate = i.InterviewDate,
+                    // Adding 3 hours until osama solve the problem of time zone
+                    InterviewDate = i.InterviewDate.AddHours(3),
                     InterviewType = i.InterviewType.Name,
                     Location = i.Address != null
                         ? $"{i.Address.AddressLine1}, {i.Address.Governate.Name}, {i.Address.Country.Name}"
