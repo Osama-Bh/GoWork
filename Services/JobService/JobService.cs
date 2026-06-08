@@ -1028,7 +1028,7 @@ namespace GoWork.Services.JobService
 
         public async Task<ApiResponse<JobSearchResponseDto>> SearchJobsAsync(JobSearchRequestDto request)
         {
-            var query = _context.TbJobs.AsNoTracking().Where(j => j.JobStatusId == (int)JobStatusEnum.Published && j.ExpirationDate < DateTime.UtcNow);
+            var query = _context.TbJobs.AsNoTracking().Where(j => j.JobStatusId == (int)JobStatusEnum.Published && j.ExpirationDate >= DateTime.UtcNow);
 
             bool noFilters = string.IsNullOrWhiteSpace(request.Search) &&
                              request.CategoryId == null &&
