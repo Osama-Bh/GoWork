@@ -2,12 +2,13 @@ using ECommerceApp.DTOs;
 using GoWork.Data;
 using GoWork.DTOs.DashboardDTOs;
 using GoWork.Enums;
+using GoWork.Infrastructure.Hangfire;
 using GoWork.Models;
 using GoWork.Services.AdminService;
 using GoWork.Services.JobService;
 using GoWork.Services.NotificationService;
 using Hangfire;
-using GoWork.Infrastructure.Hangfire;
+using Hangfire.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,11 +76,12 @@ namespace GoWork.Controllers
         public async Task<IActionResult> SendNotification()
         {
             //await _notificationService.SendToTopicAsync("all", "Test Message", "Hi there", NotificationTypeEnum.General);
+            var jobName = "Software Engineer";
 
-             await _notificationService.SendToTopicAsync(
-                "category_101",
-                "New Job Opportunity (Test)!",
-                $"A new frontEnd Dev position has just opened up. Tap to view details and apply!",
+            await _notificationService.SendToTopicAsync(
+                "",
+                "وظيفة جديدة بانتظارك!",
+                $"تمت إضافة وظيفة جديدة بعنوان \"\u2068{jobName}\u2069\". لا تفوّت الفرصة، اضغط للاطلاع على التفاصيل والتقديم.",
                 NotificationTypeEnum.JobCreated);
             return Ok();
         }
