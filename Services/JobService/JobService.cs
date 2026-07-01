@@ -1246,7 +1246,7 @@ namespace GoWork.Services.JobService
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 var searchLower = request.Search.ToLower();
-                query = query.Where(j => j.Title.ToLower().Contains(searchLower) || j.Description.ToLower().Contains(searchLower));
+                query = query.Where(j => j.Title.ToLower().Contains(searchLower) || j.Employer.ComapnyName.ToLower().Contains(searchLower));
             }
 
             // Apply strict filters
